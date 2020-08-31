@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">seeMe</string>
+    <string name="add_availability">add availability</string>
+    <string name="date">10:00–12:00 24.08</string>
+    <string name="time">Time</string>
+    <string name="set_name">set name</string>
+    <string name="jhon">Jhon</string>
+    <string name="view_list">view list</string>
+    <string name="name">Name</string>
+    <string name="chosen_date">Chosen date</string>
+    <string name="delete">delete</string>
+    <string name="st_of_avail">set start hour of availability</string>
+    <string name="ed_of_avail">set end hour of availability</string>
+    <string name="day_of_avail">set day of availability</string>
+    <string name="set_time">set time</string>
+    <string name="day_to_see">set day to see</string>
+    <string name="deleteAvailability">delete availability</string>
+    <string name="view_availability">view availability</string>
+    <string name="people">people</string>
+    <string name="shareAvailability">share your Time</string>
+</resources>
