@@ -18,10 +18,9 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".ListenerService"
+            android:name=".UdpService"
             android:enabled="true"
-            android:exported="true"></service>
-
+            android:exported="false"/>
         <activity android:name=".SendMessageActivity" />
         <activity android:name=".SeeDailyActivity" />
         <activity android:name=".DayToSeeActivity" />

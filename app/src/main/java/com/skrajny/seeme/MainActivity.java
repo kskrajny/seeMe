@@ -7,19 +7,21 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    Intent udpService;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent udpService = new Intent(MainActivity.this, ListenerService.class);
+        Intent udpService = new Intent(MainActivity.this, UdpService.class);
         startService(udpService);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
     public void addAvailability(View view) {
         Intent myIntent = new Intent(MainActivity.this, DateActivity.class);
-        stopService(udpService);
         startActivity(myIntent);
     }
 
