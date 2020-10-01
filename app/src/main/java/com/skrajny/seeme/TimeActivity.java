@@ -81,7 +81,7 @@ public class TimeActivity extends AppCompatActivity {
         edit.putString(str, ".");
         edit.commit();
         Intent myIntent = new Intent(TimeActivity.this, SendMessageActivity.class);
-        myIntent.putExtra("date", str);
+        myIntent.putExtra("date", str+groupName);
         startActivity(myIntent);
         finish();
     }

@@ -1,5 +1,6 @@
 package com.skrajny.seeme;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,6 +10,7 @@ import android.util.Log;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.util.LinkedList;
@@ -29,7 +31,6 @@ public class UdpService extends Service {
     private final String remoteAddr = "192.168.8.101";
     private final Binder binder = new LocalBinder();
     private final Queue<String> queue = new LinkedList<>();
-    SharedPreferences spTime;
     SharedPreferences spGroup;
     String groupName;
 
@@ -38,7 +39,6 @@ public class UdpService extends Service {
         super.onCreate();
         spGroup = getSharedPreferences("group", MODE_PRIVATE);
         groupName = spGroup.getString("curr_group", "lama");
-        spTime = getSharedPreferences("time"+groupName, MODE_PRIVATE);
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -109,8 +109,10 @@ public class UdpService extends Service {
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         socket.receive(packet);
         String mess = new String(packet.getData()).replaceAll("\0", "");
-        handleGottenMess(mess);
-        Log.i("seeme", "Odbieram: "+mess);
+        if(handleDate(mess)) return mess;
+        if(handleInvitation(mess)) return mess;
+        if(handleNewMember(mess)) return mess;
+        Log.i("seeme", "Błąd: "+mess);
         return mess;
     }
 
@@ -118,24 +120,62 @@ public class UdpService extends Service {
         queue.add(mess);
     }
 
-    private void handleGottenMess(String mess) {
+    private boolean handleDate(String mess) {
         try {
             String[] set = mess.split(" ");
             String[] dm = set[0].split("/");
-            if(dm.length != 2) return;
-            if(set.length != 4) return;
-            if(parseInt(dm[0]) >= 31 || parseInt(dm[1]) >= 12) return;
-            if(parseInt(set[1]) >= 1440) return;
-            if(parseInt(set[2]) >= 1440) return;
-            if(parseInt(set[1]) >= parseInt(set[2])) return;
-            if(!set[3].matches("^[a-zA-Z0-9]+$")) return;
+            if(dm.length != 2) return false;
+            if(set.length != 5) return false;
+            if(parseInt(dm[0]) >= 31 || parseInt(dm[1]) >= 12) return false;
+            if(parseInt(set[1]) >= 1440) return false;
+            if(parseInt(set[2]) >= 1440) return false;
+            if(parseInt(set[1]) >= parseInt(set[2])) return false;
+            if(!set[3].matches("^[a-zA-Z0-9]+$")) return false;
+            if(!set[4].matches("^[a-zA-Z0-9]+$")) return false;
+            if(!spGroup.getAll().containsKey(set[4])) return false;
+            SharedPreferences spTime = getSharedPreferences("time"+set[4], MODE_PRIVATE);
             SharedPreferences.Editor edit = spTime.edit();
-            edit.putString(mess, ".");
+            edit.putString(mess.substring(0, mess.lastIndexOf(' ')-1), ".");
             edit.commit();
+            return true;
             //TODO powiadomienie o dostarczeniu informacji
         } catch(Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
+    public boolean handleInvitation(String mess) {
+        try {
+            String[] set = mess.split(" ");
+            if(set.length != 2) return false;
+            if(!set[0].equals("invite")) return false;
+            if(!set[1].matches("^[a-zA-Z0-9]+$")) return false;
+            @SuppressLint("CommitPrefEdits") SharedPreferences.Editor edit = spGroup.edit();
+            edit.putString(set[1], ".");
+            edit.commit();
+            return true;
+        } catch(Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean handleNewMember(String mess) {
+        try {
+            String[] set = mess.split(" ");
+            if(set.length != 3) return false;
+            if(!set[0].equals("member")) return false;
+            if(!set[1].matches("^[a-zA-Z0-9]+$")) return false;
+            if(!(InetAddress.getByName(set[2]) instanceof Inet4Address)) return false;
+            SharedPreferences spMembers = getSharedPreferences("members"+set[1], MODE_PRIVATE);
+            SharedPreferences.Editor edit = spMembers.edit();
+            edit.putString(set[2], ".");
+            edit.commit();
+            return true;
+        } catch(Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

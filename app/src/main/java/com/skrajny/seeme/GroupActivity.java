@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -43,5 +44,13 @@ public class GroupActivity extends AppCompatActivity {
         TextView footer = findViewById(R.id.footerText);
         header.setText(name);
         footer.setText(groupName);
+        showAdresses(groupName);
+    }
+
+    public void showAdresses(String groupName) {
+        SharedPreferences spMembers = getSharedPreferences("members"+groupName, MODE_PRIVATE);
+        for(String x : spMembers.getAll().keySet()) {
+            Log.i("seeme", x);
+        }
     }
 }
