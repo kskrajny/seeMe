@@ -7,6 +7,9 @@
     android:orientation="vertical"
     tools:context=".TimeActivity">
 
+    <include layout="@layout/header" />
+    <include layout="@layout/footer" />
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="50dp"

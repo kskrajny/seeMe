@@ -7,6 +7,9 @@
     android:background="#ffffff"
     tools:context=".MainActivity">
 
+    <include layout="@layout/header" />
+    <include layout="@layout/footer" />
+
     <androidx.appcompat.widget.AppCompatButton
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -30,6 +33,14 @@
         android:background="@android:color/holo_orange_light"
         android:onClick="viewAvailability"
         android:text="@string/view_availability" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="@android:color/holo_purple"
+        android:onClick="setGroup"
+        android:text="@string/set_group" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:layout_width="match_parent"

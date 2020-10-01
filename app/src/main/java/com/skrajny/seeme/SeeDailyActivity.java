@@ -14,8 +14,10 @@ public class SeeDailyActivity extends AppCompatActivity {
     String date;
     TextView textView;
     LinearLayout layout;
-    SharedPreferences sp;
+    SharedPreferences spTime;
+    SharedPreferences spGroup;
     ViewGroup.LayoutParams params;
+    String groupName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,11 +27,15 @@ public class SeeDailyActivity extends AppCompatActivity {
         textView = findViewById(R.id.dateToSee);
         textView.setText(date);
         layout = findViewById(R.id.layoutDaily);
-        sp = getSharedPreferences("name", MODE_PRIVATE);
+        spGroup = getSharedPreferences("group", MODE_PRIVATE);
+        groupName = spGroup.getString("curr_group", "lama");
+        spTime = getSharedPreferences("time"+groupName, MODE_PRIVATE);
         params = findViewById(R.id.exampleViewSeeDaily).getLayoutParams();
+
+        setHeaderFooter();
+
         TreeSet<String> sortedSet = new TreeSet<>();
-        for(String x: sp.getAll().keySet()) {
-            if(x.equals("name")) continue;
+        for(String x: spTime.getAll().keySet()) {
             String str = x.substring(x.indexOf(" ")+1);
             if(x.startsWith(date)) sortedSet.add(str);
         }
@@ -59,4 +65,15 @@ public class SeeDailyActivity extends AppCompatActivity {
             }
         }
     }
+
+    public void setHeaderFooter() {
+        SharedPreferences spGroup = getSharedPreferences("group", MODE_PRIVATE);
+        String groupName = spGroup.getString("curr_group", "lama");
+        SharedPreferences spName = getSharedPreferences("name", MODE_PRIVATE);
+        String name = spName.getString("name", "Anonymous");
+        TextView header = findViewById(R.id.headerText);
+        TextView footer = findViewById(R.id.footerText);
+        header.setText(name);
+        footer.setText(groupName);
+    };
 }

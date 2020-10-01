@@ -4,31 +4,26 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".DateActivity"
+    tools:context=".GroupActivity"
     android:orientation="vertical">
 
     <include layout="@layout/header" />
     <include layout="@layout/footer" />
 
-    <CalendarView
-        android:id="@+id/calendar"
+    <Button
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/chosen"
-        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:gravity="center"
-        android:layout_height="50dp" />
+        android:text="@string/change_group"
+        android:onClick="changeGroup" />
 
     <Button
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:gravity="center"
-        android:layout_gravity="bottom"
-        android:text="@string/day_of_avail"
-        android:visibility="invisible"
-        android:id="@+id/setDay"
-        android:onClick="setDayOfAvail" />
+        android:text="@string/add_member"
+        android:onClick="addMember" />
 
 </LinearLayout>

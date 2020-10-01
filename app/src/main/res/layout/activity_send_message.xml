@@ -6,6 +6,9 @@
     android:layout_height="match_parent"
     tools:context=".SendMessageActivity">
 
+    <include layout="@layout/header" />
+    <include layout="@layout/footer" />
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="match_parent"

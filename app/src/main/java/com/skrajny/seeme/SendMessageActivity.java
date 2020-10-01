@@ -4,9 +4,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SendMessageActivity extends AppCompatActivity {
@@ -20,6 +24,7 @@ public class SendMessageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send_message);
         date = getIntent().getExtras().getString("date");
+        setHeaderFooter();
     }
 
     @Override
@@ -38,6 +43,7 @@ public class SendMessageActivity extends AppCompatActivity {
     }
 
     public void shareTime(View view) {
+        Log.i("seeMe", date);
         if(mBound) {
             mService.addMessage(date);
             finish();
@@ -60,4 +66,14 @@ public class SendMessageActivity extends AppCompatActivity {
         }
     };
 
+    public void setHeaderFooter() {
+        SharedPreferences spGroup = getSharedPreferences("group", MODE_PRIVATE);
+        String groupName = spGroup.getString("curr_group", "lama");
+        SharedPreferences spName = getSharedPreferences("name", MODE_PRIVATE);
+        String name = spName.getString("name", "Anonymous");
+        TextView header = findViewById(R.id.headerText);
+        TextView footer = findViewById(R.id.footerText);
+        header.setText(name);
+        footer.setText(groupName);
+    }
 }

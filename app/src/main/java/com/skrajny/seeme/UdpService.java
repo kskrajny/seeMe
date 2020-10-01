@@ -2,6 +2,7 @@ package com.skrajny.seeme;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -15,37 +16,46 @@ import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static java.lang.Integer.parseInt;
+
 public class UdpService extends Service {
 
     private InetAddress inetAddr;
     private DatagramSocket socket1;
     private DatagramSocket socket2;
-    private final int port1 = 9090;
-    private final int port2 = 9091;
-    private final Timer timer1 = new Timer();
+    private int port1 = 9090;
+    private int port2 = 9091;
+    private final int remotePort = 10001;
+    private final String remoteAddr = "192.168.8.101";
     private final Binder binder = new LocalBinder();
     private final Queue<String> queue = new LinkedList<>();
+    SharedPreferences spTime;
+    SharedPreferences spGroup;
+    String groupName;
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        spGroup = getSharedPreferences("group", MODE_PRIVATE);
+        groupName = spGroup.getString("curr_group", "lama");
+        spTime = getSharedPreferences("time"+groupName, MODE_PRIVATE);
+    }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i("seeMe", "startService in MAIN");
         try {
-            inetAddr = InetAddress.getByName("192.168.8.100");
+            inetAddr = InetAddress.getByName(remoteAddr);
             socket1 = new DatagramSocket(port1);
-            socket1.setSoTimeout(10000);
             socket2 = new DatagramSocket(port2);
             socket1.setSoTimeout(9000);
-            socket2.setSoTimeout(9000);
-            timer1.scheduleAtFixedRate(new TimerTask() {
+            new Timer().scheduleAtFixedRate(new TimerTask() {
                 public void run() {
-                    Log.i("seeMe", "sender");
                     try {
                         String mess = queue.peek();
                         if(mess != null) {
-                            sendMessage(socket1, port1, mess);
-                            if (getMessage(socket2).equals("OK")) {
+                            Log.i("seeme", "Wysylam: "+mess);
+                            sendMessage(socket1, remotePort, mess);
+                            if (getMessage(socket1).equals("OK")) {
                                 queue.remove();
-                                Log.i("seeMe", queue.toString());
                             }
                         }
                     } catch (SocketTimeoutException ignored) {}
@@ -54,24 +64,28 @@ public class UdpService extends Service {
                     }
                 }
             }, 0, 10000);
-            new Timer().scheduleAtFixedRate(new TimerTask() {
-                public void run() {
-                    Log.i("seeMe", "listener");
-                    String mess;
-                    try {
-                        mess = getMessage(socket1);
-                        sendMessage(socket2, port2, "OK");
-                    } catch(SocketTimeoutException ignored) {}
-                    catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, 0, 10000);
+
+            (new Thread(new HelloRunnable())).start();
+
         } catch (Exception e) {
-            Log.i("seeMe", "WYJĄTEK W ON START");
             e.printStackTrace();
         }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    public class HelloRunnable implements Runnable {
+        public void run() {
+            try {
+                String mess;
+                while (true) {
+                    mess = getMessage(socket2);
+
+                    sendMessage(socket2, remotePort, "OK");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public class LocalBinder extends Binder {
@@ -95,12 +109,33 @@ public class UdpService extends Service {
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         socket.receive(packet);
         String mess = new String(packet.getData()).replaceAll("\0", "");
-        Log.i("seeMe", "ODEBRANO "+mess);
+        handleGottenMess(mess);
+        Log.i("seeme", "Odbieram: "+mess);
         return mess;
     }
 
     public void addMessage(String mess) {
         queue.add(mess);
+    }
+
+    private void handleGottenMess(String mess) {
+        try {
+            String[] set = mess.split(" ");
+            String[] dm = set[0].split("/");
+            if(dm.length != 2) return;
+            if(set.length != 4) return;
+            if(parseInt(dm[0]) >= 31 || parseInt(dm[1]) >= 12) return;
+            if(parseInt(set[1]) >= 1440) return;
+            if(parseInt(set[2]) >= 1440) return;
+            if(parseInt(set[1]) >= parseInt(set[2])) return;
+            if(!set[3].matches("^[a-zA-Z0-9]+$")) return;
+            SharedPreferences.Editor edit = spTime.edit();
+            edit.putString(mess, ".");
+            edit.commit();
+            //TODO powiadomienie o dostarczeniu informacji
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

@@ -18,4 +18,9 @@
     <string name="view_availability">view availability</string>
     <string name="people">people</string>
     <string name="shareAvailability">share your Time</string>
+    <string name="new_group">new group</string>
+    <string name="change_group">change group</string>
+    <string name="add_member">add member</string>
+    <string name="lama">lama</string>
+    <string name="set_group">set group</string>
 </resources>

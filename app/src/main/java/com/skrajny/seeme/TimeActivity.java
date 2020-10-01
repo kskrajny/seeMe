@@ -13,7 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 public class TimeActivity extends AppCompatActivity {
 
     String date;
-    SharedPreferences sp;
+    SharedPreferences spName;
+    SharedPreferences spTime;
+    SharedPreferences spGroup;
+    String groupName;
     LinearLayout layout;
     TextView startView;
     TextView endView;
@@ -24,15 +27,22 @@ public class TimeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_time);
         date = getIntent().getExtras().getString("date");
-        sp = getSharedPreferences("name", MODE_PRIVATE);
+        spName = getSharedPreferences("name", MODE_PRIVATE);
+        spGroup = getSharedPreferences("group", MODE_PRIVATE);
+        groupName = spGroup.getString("curr_group", "lama");
+        spTime = getSharedPreferences("time"+groupName, MODE_PRIVATE);
         layout = findViewById(R.id.layout);
+
+        setHeaderFooter();
+
         startView = null;
         endView = null;
         setTime = findViewById(R.id.setTime);
         for(int h=0;h<24;h++) {
             for(int m=0;m<60;m+=30) {
                 final TextView textView = new TextView(this);
-                textView.setId(60*h+m);
+                final int id = 60*h+m;
+                textView.setId(id);
                 textView.setGravity(Gravity.CENTER);
                 textView.setText(h + ":" + m);
                 textView.setTextSize(15);
@@ -45,12 +55,12 @@ public class TimeActivity extends AppCompatActivity {
                         } else if (endView == null) {
                             endView = textView;
                             endView.setTextSize(20);
-                            for(int i = startView.getId();i<endView.getId();i+=30) {
+                            for(int i = startView.getId();i<id;i+=30) {
                                 ((TextView)findViewById(i)).setTextSize(20);
                             }
                             setTime.setVisibility(View.VISIBLE);
                         } else {
-                            for(int i = startView.getId();i<=endView.getId();i+=30) {
+                            for(int i = startView.getId();i<=id;i+=30) {
                                 ((TextView)findViewById(i)).setTextSize(15);
                             }
                             setTime.setVisibility(View.INVISIBLE);
@@ -65,8 +75,8 @@ public class TimeActivity extends AppCompatActivity {
     public void setTime(View view) {
         int startId = startView.getId();
         int endId = endView.getId();
-        String name = sp.getString("name", "Anonymous");
-        SharedPreferences.Editor edit = sp.edit();
+        String name = spName.getString("name", "Anonymous");
+        SharedPreferences.Editor edit = spTime.edit();
         String str = date+" "+startId+" "+endId+" "+name;
         edit.putString(str, ".");
         edit.commit();
@@ -76,6 +86,14 @@ public class TimeActivity extends AppCompatActivity {
         finish();
     }
 
-
-
+    public void setHeaderFooter() {
+        SharedPreferences spGroup = getSharedPreferences("group", MODE_PRIVATE);
+        String groupName = spGroup.getString("curr_group", "lama");
+        SharedPreferences spName = getSharedPreferences("name", MODE_PRIVATE);
+        String name = spName.getString("name", "Anonymous");
+        TextView header = findViewById(R.id.headerText);
+        TextView footer = findViewById(R.id.footerText);
+        header.setText(name);
+        footer.setText(groupName);
+    }
 }

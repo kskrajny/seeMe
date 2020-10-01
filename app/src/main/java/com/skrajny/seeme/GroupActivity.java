@@ -1,36 +1,37 @@
 package com.skrajny.seeme;
 
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class NameActivity extends AppCompatActivity {
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 
-    SharedPreferences spName;
-    EditText nameText;
+public class GroupActivity extends AppCompatActivity {
+
+    SharedPreferences spGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_name);
-        spName = getSharedPreferences("name", MODE_PRIVATE);
-        nameText = findViewById(R.id.name);
+        setContentView(R.layout.activity_group);
+        spGroup = getSharedPreferences("group", MODE_PRIVATE);
         setHeaderFooter();
     }
 
-    public void setName(View view) {
-        SharedPreferences.Editor edit = spName.edit();
-        String newName = nameText.getText().toString();
-        edit.remove("name");
-        edit.commit();
-        edit.putString("name", newName);
-        edit.commit();
-        Log.i("seeme", newName);
+    public void onResume() {
+        super.onResume();
         setHeaderFooter();
+    }
+
+    public void changeGroup(View view) {
+        Intent myIntent = new Intent(GroupActivity.this, ChangeGroupActivity.class);
+        startActivity(myIntent);
+    }
+
+    public void addMember(View view) {
+
     }
 
     public void setHeaderFooter() {

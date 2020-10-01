@@ -4,29 +4,43 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".NameActivity"
+    tools:context=".ChangeGroupActivity"
     android:orientation="vertical">
 
     <include layout="@layout/header" />
     <include layout="@layout/footer" />
 
     <EditText
-        android:id="@+id/name"
+        android:id="@+id/groupName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        tools:ignore="MissingConstraints"
-        android:hint="@string/jhon"
-        android:inputType="text"
+        android:gravity="center"
+        android:hint="@string/lama"
         android:importantForAutofill="no"
-        android:gravity="center"/>
+        android:inputType="text"
+        tools:ignore="MissingConstraints" />
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:text="@string/set_name"
-        android:onClick="setName" />
+        android:onClick="setGroupName"
+        android:text="@string/set_name" />
+
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="4" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/layout"/>
+
+    </ScrollView>
 
 </LinearLayout>
