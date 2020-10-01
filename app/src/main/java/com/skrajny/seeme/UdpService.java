@@ -57,6 +57,9 @@ public class UdpService extends Service {
                             if (getMessage(socket1).equals("OK")) {
                                 queue.remove();
                             }
+                            if (getMessage(socket1).equals("WRONG")) {
+                                throw new Error("Got bad message");
+                            }
                         }
                     } catch (SocketTimeoutException ignored) {}
                     catch (Exception e) {
@@ -79,11 +82,15 @@ public class UdpService extends Service {
                 String mess;
                 while (true) {
                     mess = getMessage(socket2);
-
                     sendMessage(socket2, remotePort, "OK");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                try {
+                    sendMessage(socket2, remotePort, "WRONG");
+                } catch(Exception e2) {
+                    e2.printStackTrace();
+                }
             }
         }
     }
@@ -112,8 +119,7 @@ public class UdpService extends Service {
         if(handleDate(mess)) return mess;
         if(handleInvitation(mess)) return mess;
         if(handleNewMember(mess)) return mess;
-        Log.i("seeme", "Błąd: "+mess);
-        return mess;
+        throw new Error();
     }
 
     public void addMessage(String mess) {
