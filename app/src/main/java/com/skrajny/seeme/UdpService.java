@@ -20,6 +20,12 @@ import java.util.TimerTask;
 
 import static java.lang.Integer.parseInt;
 
+/* TODO
+    dodać hasła do komunikacji
+    poprawić przejrzystość komunikacji(id tresci czy cos)
+    przenieść całą komunikację do tego serwisu
+ */
+
 public class UdpService extends Service {
 
     private InetAddress inetAddr;

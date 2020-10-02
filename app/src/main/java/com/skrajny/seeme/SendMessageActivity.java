@@ -15,16 +15,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class SendMessageActivity extends AppCompatActivity {
 
-    private String date;
+    private String mess;
+    private String address = null;
     private UdpService mService;
     private boolean mBound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_send_message);
-        date = getIntent().getExtras().getString("date");
-        setHeaderFooter();
+        mess = getIntent().getExtras().getString("mess");
+        address = getIntent().getExtras().getString("address");
     }
 
     @Override
@@ -32,6 +32,7 @@ public class SendMessageActivity extends AppCompatActivity {
         super.onStart();
         Intent intent = new Intent(this, UdpService.class);
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        share();
     }
 
 
@@ -42,10 +43,13 @@ public class SendMessageActivity extends AppCompatActivity {
         mBound = false;
     }
 
-    public void shareTime(View view) {
-        Log.i("seeMe", date);
+    public void share() {
+        Log.i("seeMe", mess);
         if(mBound) {
-            mService.addMessage(date);
+            if(address == null)
+                mService.addMessage(mess);
+            else
+                mService.addMessage(mess+"$"+address);
             finish();
         }
     }
@@ -66,14 +70,4 @@ public class SendMessageActivity extends AppCompatActivity {
         }
     };
 
-    public void setHeaderFooter() {
-        SharedPreferences spGroup = getSharedPreferences("group", MODE_PRIVATE);
-        String groupName = spGroup.getString("curr_group", "lama");
-        SharedPreferences spName = getSharedPreferences("name", MODE_PRIVATE);
-        String name = spName.getString("name", "Anonymous");
-        TextView header = findViewById(R.id.headerText);
-        TextView footer = findViewById(R.id.footerText);
-        header.setText(name);
-        footer.setText(groupName);
-    }
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,46 +10,55 @@
     <include layout="@layout/header" />
     <include layout="@layout/footer" />
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:id="@+id/dateToSee"
-        android:gravity="center"
-        tools:ignore="PrivateResource" />
+        android:layout_height="match_parent"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp"
+        android:orientation="vertical" >
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" >
-
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/layoutDaily"
-            android:orientation="vertical" >
+            android:layout_height="50dp"
+            android:id="@+id/dateToSee"
+            android:gravity="center"
+            tools:ignore="PrivateResource" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:orientation="horizontal"
-                android:layout_height="20dp"
-                tools:ignore="UselessParent">
+                android:layout_height="wrap_content"
+                android:id="@+id/layoutDaily"
+                android:orientation="vertical" >
 
-                <TextView
-                    android:id="@+id/exampleViewSeeDaily"
-                    android:layout_height="match_parent"
-                    android:text="@string/time"
-                    android:layout_weight="1"
-                    android:layout_width="0dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_height="20dp"
+                    tools:ignore="UselessParent">
 
-                <TextView
-                    android:layout_height="match_parent"
-                    android:text="@string/people"
-                    android:layout_weight="1"
-                    android:layout_width="0dp" />
+                    <TextView
+                        android:id="@+id/exampleViewSeeDaily"
+                        android:layout_height="match_parent"
+                        android:text="@string/time"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+
+                    <TextView
+                        android:layout_height="match_parent"
+                        android:text="@string/people"
+                        android:layout_weight="1"
+                        android:layout_width="0dp" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
-        </LinearLayout>
+        </ScrollView>
 
-    </ScrollView>
+    </LinearLayout>
 
-</LinearLayout>
+</RelativeLayout>

@@ -32,7 +32,8 @@ public class GroupActivity extends AppCompatActivity {
     }
 
     public void addMember(View view) {
-
+        Intent myIntent = new Intent(GroupActivity.this, AddMemberActivity.class);
+        startActivity(myIntent);
     }
 
     public void setHeaderFooter() {
