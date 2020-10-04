@@ -10,37 +10,34 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class NameActivity extends AppCompatActivity {
 
-    SharedPreferences spName;
+    SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
     EditText nameText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_name);
-        spName = getSharedPreferences("name", MODE_PRIVATE);
         nameText = findViewById(R.id.name);
         setHeaderFooter();
     }
 
     public void setName(View view) {
-        SharedPreferences.Editor edit = spName.edit();
+        SharedPreferences.Editor edit = sp.edit();
         String newName = nameText.getText().toString();
-        edit.remove("name");
-        edit.commit();
-        edit.putString("name", newName);
-        edit.commit();
+        edit.remove("user");
+        edit.putString("user", newName);
+        edit.apply();
         Log.i("seeme", newName);
         setHeaderFooter();
     }
 
     public void setHeaderFooter() {
-        SharedPreferences spGroup = getSharedPreferences("group", MODE_PRIVATE);
-        String groupName = spGroup.getString("curr_group", "lama");
-        SharedPreferences spName = getSharedPreferences("name", MODE_PRIVATE);
-        String name = spName.getString("name", "Anonymous");
+        SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+        String group = sp.getString("curr_group", "private");
+        String user = sp.getString("curr_user", "anonymous");
         TextView header = findViewById(R.id.headerText);
         TextView footer = findViewById(R.id.footerText);
-        header.setText(name);
-        footer.setText(groupName);
+        header.setText(user);
+        footer.setText(group);
     }
 }

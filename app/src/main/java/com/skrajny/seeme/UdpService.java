@@ -4,99 +4,85 @@ import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
+import android.text.format.DateFormat;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.lang.Integer.parseInt;
-
-/* TODO
-    dodać hasła do komunikacji
-    poprawić przejrzystość komunikacji(id tresci czy cos)
-    przenieść całą komunikację do tego serwisu
- */
+@SuppressLint("Assert")
 
 public class UdpService extends Service {
 
-    private InetAddress inetAddr;
-    private DatagramSocket socket1;
-    private DatagramSocket socket2;
-    private int port1 = 9090;
-    private int port2 = 9091;
-    private final int remotePort = 10001;
-    private final String remoteAddr = "192.168.8.101";
-    private final Binder binder = new LocalBinder();
-    private final Queue<String> queue = new LinkedList<>();
-    SharedPreferences spGroup;
-    String groupName;
+    SQLiteDatabase db = openOrCreateDatabase("db",MODE_PRIVATE,null);
+    InetAddress inetAddr;
+    DatagramSocket socket1;
+    DatagramSocket socket2;
+    final int remotePort = 10001;
+    final Binder binder = new LocalBinder();
+    final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+    SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+
+    @SuppressLint("SimpleDateFormat")
+    SimpleDateFormat sdfrmt = new SimpleDateFormat("MM/dd/yyyy");
+    Date d = new Date();
 
     @Override
     public void onCreate() {
         super.onCreate();
-        spGroup = getSharedPreferences("group", MODE_PRIVATE);
-        groupName = spGroup.getString("curr_group", "lama");
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
         try {
+            String remoteAddr = "192.168.8.101";
             inetAddr = InetAddress.getByName(remoteAddr);
+            int port1 = 9090;
             socket1 = new DatagramSocket(port1);
+            int port2 = 9091;
             socket2 = new DatagramSocket(port2);
-            socket1.setSoTimeout(9000);
-            new Timer().scheduleAtFixedRate(new TimerTask() {
-                public void run() {
-                    try {
-                        String mess = queue.peek();
-                        if(mess != null) {
-                            Log.i("seeme", "Wysylam: "+mess);
-                            sendMessage(socket1, remotePort, mess);
-                            if (getMessage(socket1).equals("OK")) {
-                                queue.remove();
-                            }
-                            if (getMessage(socket1).equals("WRONG")) {
-                                throw new Error("Got bad message");
-                            }
-                        }
-                    } catch (SocketTimeoutException ignored) {}
-                    catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }, 0, 10000);
-
-            (new Thread(new HelloRunnable())).start();
-
+            (new Thread(new udpClient())).start();
+            (new Thread(new udpServer())).start();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return super.onStartCommand(intent, flags, startId);
     }
 
-    public class HelloRunnable implements Runnable {
+    public class udpClient implements Runnable {
+        public void run() {
+            //noinspection InfiniteLoopStatement
+            while (true) {
+                try {
+                    String mess = queue.take();
+                    String messID = "messID";
+                    sendMessage(socket1, remotePort, mess+messID);
+                    getMessageClient(messID);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public class udpServer implements Runnable {
         public void run() {
             try {
-                String mess;
+                //noinspection InfiniteLoopStatement
                 while (true) {
-                    mess = getMessage(socket2);
-                    sendMessage(socket2, remotePort, "OK");
+                    getMessageServer();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                try {
-                    sendMessage(socket2, remotePort, "WRONG");
-                } catch(Exception e2) {
-                    e2.printStackTrace();
-                }
             }
         }
     }
@@ -112,82 +98,177 @@ public class UdpService extends Service {
         return binder;
     }
 
-    private void sendMessage(DatagramSocket socket, int port, String mess) throws Exception {
-        DatagramPacket packet = new DatagramPacket(mess.getBytes(), mess.length(), inetAddr, port);
-        socket.send(packet);
+    public void sendMessage(DatagramSocket socket, int port, String mess) {
+        try {
+            DatagramPacket packet = new DatagramPacket(mess.getBytes(), mess.length(), inetAddr, port);
+            socket.send(packet);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private String getMessage(DatagramSocket socket) throws Exception {
+    public void getMessageClient(String messID) {
         byte[] buffer = new byte[32];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-        socket.receive(packet);
+        try {
+            socket1.receive(packet);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         String mess = new String(packet.getData()).replaceAll("\0", "");
-        if(handleDate(mess)) return mess;
-        if(handleInvitation(mess)) return mess;
-        if(handleNewMember(mess)) return mess;
-        throw new Error();
+        String[] set = mess.split(" ");
+        switch (parseInt(set[0])) {
+            case 6:
+                handleAcknowledgment(mess, messID);
+                break;
+            case 7:
+                handleRejection(mess, messID);
+                break;
+            default:
+                throw new Error();
+        }
     }
+
+    public void getMessageServer() {
+        byte[] buffer = new byte[32];
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+        try {
+            socket2.receive(packet);
+        } catch(Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        String mess = new String(packet.getData()).replaceAll("\0", "");
+        String[] set = mess.split(" ");
+        try {
+            switch (parseInt(set[0])) {
+                case 1:
+                    handleNewMember(mess);
+                    break;
+                case 2:
+                    handleInvitation(mess);
+                    break;
+                case 3:
+                    handleDate(mess);
+                    break;
+                case 4:
+                    handlePrivateInvitation(mess);
+                    break;
+                case 5:
+                    handlePrivateMessage(mess);
+                    break;
+            }
+        } catch (Exception e) {
+            sendMessage(socket2, remotePort, "7 "+set[set.length-1]);
+        }
+        sendMessage(socket2, remotePort, "6 "+set[set.length-1]);
+    }
+
+    /*!!!!!!!!!!!! Handlers of responses */
+    private void handleAcknowledgment(String mess, String messID) {
+        try {
+            String[] set = mess.split(" ");
+            assert(set.length == 2);
+            assert(set[1].equals(messID)); // messID
+            queue.remove();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleRejection(String mess, String messID) {
+        try {
+            String[] set = mess.split(" ");
+            assert(set.length == 2);
+            assert(set[1].equals(messID)); // messID
+            //TODO make log
+            queue.remove();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    /*!!!!!!!!!!!! Handlers of responses */
+
+    /*!!!!!!!!!!!! Handlers of messages coming to server */
+    private void handlePrivateInvitation(String mess) throws Exception {
+        String[] set = mess.split(" ");
+        if(set.length != 5 ||
+                !(InetAddress.getByName(set[2]) instanceof Inet4Address) ||
+                !set[2].matches(getString(R.string.goodChars)) ||
+                !set[3].matches(getString(R.string.goodChars)) ||
+                !set[4].matches(getString(R.string.goodChars)))
+            throw new Exception();
+        db.beginTransaction();
+        db.execSQL("INSERT INTO chats values("+set[1]+","+set[2]+","+set[3]+");");
+        db.endTransaction();
+    }
+
+    private void handlePrivateMessage(String mess) throws Exception {
+        String[] set = mess.split(" ");
+        if(set.length != 5 ||
+                !(InetAddress.getByName(set[1]) instanceof Inet4Address) ||
+                !set[4].matches(getString(R.string.goodChars)))
+            throw new Exception();
+        Cursor c = db.rawQuery("SELECT password FROM chats WHERE ip=?", new String[] { set[1] });
+        String password = c.getString(c.getInt(c.getColumnIndex("password")));
+        if(!password.equals(set[3]))
+            throw new Exception();
+        String date = new String(DateFormat.format("MM/dd/yyyy", d.getTime());
+        db.beginTransaction();
+        db.execSQL("INSERT INTO messages values("+set[1]+","+date+","+set[2]+")");
+        db.endTransaction();
+    }
+
+
+    private void handleDate(String mess) throws Exception {
+        String[] set = mess.split(" ");
+        Date javaDate1 = sdfrmt.parse(set[1]); // start
+        Date javaDate2 = sdfrmt.parse(set[2]); // stop
+        if(set.length != 6 ||
+                !set[3].matches(getString(R.string.goodChars)))
+            throw new Exception();
+        Cursor c = db.rawQuery("SELECT id FROM groups WHERE id=?", new String[] { set[4] });
+        if(c.getCount() != 1)
+            throw new Exception();
+        db.beginTransaction();
+        db.execSQL("INSERT INTO "+set[4]+"A values("+set[1]+","+set[2]+","+set[3]+")");
+        db.endTransaction();
+    }
+
+    public void handleInvitation(String mess) throws Exception {
+        String[] set = mess.split(" ");
+        if(set.length != 5 ||
+                !set[3].matches(getString(R.string.goodChars)) ||
+                !set[4].matches(getString(R.string.goodChars)))
+            throw new Exception();
+        Cursor c = db.rawQuery("SELECT id FROM groups WHERE id=?", new String[] { set[4] });
+        if(c.getCount() != 1)
+            throw new Exception();
+        String password = sp.getString("password", null);
+        if(!password.equals(2))
+            throw new Exception();
+        db.beginTransaction();
+        db.execSQL("INSERT INTO groups values("+set[1]+","+set[3]+")");
+        db.endTransaction();
+    }
+
+    public void handleNewMember(String mess) throws Exception {
+        String[] set = mess.split(" ");
+        if(set.length != 4 ||
+                !(InetAddress.getByName(set[2]) instanceof Inet4Address) ||
+                set[3].matches(getString(R.string.goodChars)))
+            throw new Exception();
+        Cursor c = db.rawQuery("SELECT id FROM groups WHERE id=?", new String[] { set[4] });
+        if(c.getCount() != 1)
+            throw new Exception();
+        db.beginTransaction();
+        db.execSQL("INSERT INTO "+set[1]+"M values("+set[2]+")");
+        db.endTransaction();
+    }
+    /*!!!!!!!!!!!! End of Handlers for server */
 
     public void addMessage(String mess) {
         queue.add(mess);
     }
 
-    private boolean handleDate(String mess) {
-        try {
-            String[] set = mess.split(" ");
-            String[] dm = set[0].split("/");
-            if(dm.length != 2) return false;
-            if(set.length != 5) return false;
-            if(parseInt(dm[0]) >= 31 || parseInt(dm[1]) >= 12) return false;
-            if(parseInt(set[1]) >= 1440) return false;
-            if(parseInt(set[2]) >= 1440) return false;
-            if(parseInt(set[1]) >= parseInt(set[2])) return false;
-            if(!set[3].matches("^[a-zA-Z0-9]+$")) return false;
-            if(!set[4].matches("^[a-zA-Z0-9]+$")) return false;
-            if(!spGroup.getAll().containsKey(set[4])) return false;
-            SharedPreferences spTime = getSharedPreferences("time"+set[4], MODE_PRIVATE);
-            SharedPreferences.Editor edit = spTime.edit();
-            edit.putString(mess.substring(0, mess.lastIndexOf(' ')-1), ".");
-            edit.commit();
-            return true;
-            //TODO powiadomienie o dostarczeniu informacji
-        } catch(Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public boolean handleInvitation(String mess) {
-        try {
-            String[] set = mess.split(" ");
-            if(set.length != 2) return false;
-            if(!set[0].equals("invite")) return false;
-            if(!set[1].matches("^[a-zA-Z0-9]+$")) return false;
-            @SuppressLint("CommitPrefEdits") SharedPreferences.Editor edit = spGroup.edit();
-            edit.putString(set[1], ".");
-            edit.commit();
-            return true;
-        } catch(Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public boolean handleNewMember(String mess) {
-        try {
-            String[] set = mess.split(" ");
-            if(set.length != 3) return false;
-            if(!set[0].equals("member")) return false;
-            if(!set[1].matches("^[a-zA-Z0-9]+$")) return false;
-            if(!(InetAddress.getByName(set[2]) instanceof Inet4Address)) return false;
-            SharedPreferences spMembers = getSharedPreferences("members"+set[1], MODE_PRIVATE);
-            SharedPreferences.Editor edit = spMembers.edit();
-            edit.putString(set[2], ".");
-            edit.commit();
-            return true;
-        } catch(Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 }

@@ -65,13 +65,11 @@ public class DeleteActivity extends AppCompatActivity {
     }
 
     public void setHeaderFooter() {
-        SharedPreferences spGroup = getSharedPreferences("group", MODE_PRIVATE);
-        String groupName = spGroup.getString("curr_group", "lama");
-        SharedPreferences spName = getSharedPreferences("name", MODE_PRIVATE);
-        String name = spName.getString("name", "Anonymous");
+        String group = sp.getString("group", "lama");
+        String user = sp.getString("name", "Anonymous");
         TextView header = findViewById(R.id.headerText);
         TextView footer = findViewById(R.id.footerText);
-        header.setText(name);
+        header.setText(user);
         footer.setText(groupName);
     }
 }

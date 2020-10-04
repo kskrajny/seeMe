@@ -2,8 +2,8 @@ package com.skrajny.seeme;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -20,6 +20,12 @@ public class MainActivity extends AppCompatActivity {
         setHeaderFooter();
         Intent udpService = new Intent(MainActivity.this, UdpService.class);
         startService(udpService);
+        SQLiteDatabase db = openOrCreateDatabase("db",MODE_PRIVATE,null);
+        db.beginTransaction();
+        db.execSQL("CREATE TABLE IF NOT EXISTS groups(id varchar NOT NULL PRIMARY KEY, name varchar NOT NULL);");
+        db.execSQL("CREATE TABLE IF NOT EXISTS chats(ip varchar NOT NULL PRIMARY KEY, name varchar NOT NULL, password NOT NULL);");
+        db.execSQL("CREATE TABLE IF NOT EXISTS messages(ip varchar NOT NULL PRIMARY KEY, received date NOT NULL, content text NOT NULL);");
+        db.endTransaction();
     }
 
     public void onResume() {
@@ -67,5 +73,4 @@ public class MainActivity extends AppCompatActivity {
         header.setText(name);
         footer.setText(groupName);
     }
-
 }

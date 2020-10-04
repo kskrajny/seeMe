@@ -23,4 +23,5 @@
     <string name="add_member">add member</string>
     <string name="lama">lama</string>
     <string name="set_group">set group</string>
+    <string name="goodChars">^[a-zA-Z0-9]+$</string>
 </resources>
