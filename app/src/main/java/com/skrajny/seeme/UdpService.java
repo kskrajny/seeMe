@@ -213,7 +213,7 @@ public class UdpService extends Service {
         String password = c.getString(c.getInt(c.getColumnIndex("password")));
         if(!password.equals(set[3]))
             throw new Exception();
-        String date = new String(DateFormat.format("MM/dd/yyyy", d.getTime());
+        String date = DateFormat.format("MM/dd/yyyy", d.getTime()).toString();
         db.beginTransaction();
         db.execSQL("INSERT INTO messages values("+set[1]+","+date+","+set[2]+")");
         db.endTransaction();
