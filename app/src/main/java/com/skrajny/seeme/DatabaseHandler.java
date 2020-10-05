@@ -19,7 +19,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
     private static final String KEY_IP = "ip";
-    private static final String groupsQuery = "SELECT * FROM GROUPS";
+    private static final String groupsQuery = "SELECT * FROM "+TABLE_GROUPS;
     private static final String addGroupQuery = "INSERT INTO "+TABLE_GROUPS+" values(?, ?)";
 
     public DatabaseHandler(Context context) {
@@ -34,6 +34,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 +KEY_NAME+ " varchar NOT NULL);");
         db.execSQL("CREATE TABLE IF NOT EXISTS chats(ip varchar NOT NULL PRIMARY KEY, name varchar NOT NULL, password NOT NULL);");
         db.execSQL("CREATE TABLE IF NOT EXISTS messages(ip varchar NOT NULL PRIMARY KEY, received date NOT NULL, content text NOT NULL);");
+        addGroup("lama", "qwerty");
     }
 
     // Upgrading database
