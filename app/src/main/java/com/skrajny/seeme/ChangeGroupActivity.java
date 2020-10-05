@@ -1,40 +1,40 @@
 package com.skrajny.seeme;
 
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.List;
+
 public class ChangeGroupActivity extends AppCompatActivity {
 
-    SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);;
-    SQLiteDatabase db = openOrCreateDatabase("db",MODE_PRIVATE,null);
-    EditText nameText;
+    SharedPreferences sp;
+    DatabaseHandler db;
     LinearLayout layout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_group);
-        nameText = findViewById(R.id.groupName);
         layout = findViewById(R.id.layout);
-
-        Cursor c = db.rawQuery("SELECT name FROM groups", new String[] {} );
-        while (c.moveToNext()) {
-            String name = c.getString(c.getColumnIndex("name"));
+        sp = getSharedPreferences("settings", MODE_PRIVATE);;
+        db = new DatabaseHandler(this);
+        List<Pair<String, String>> list = db.getGroups();
+        for (Pair<String, String> x : list) {
+            final String name = x.first;
+            final String id = x.second;
             final TextView textView = new TextView(this);
             textView.setText(name);
             textView.setTextSize(20);
             textView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    nameText.setText(textView.getText());
+                    setGroupName(name, id);
                 }
             });
             layout.addView(textView);
@@ -43,20 +43,13 @@ public class ChangeGroupActivity extends AppCompatActivity {
         setHeaderFooter();
     }
 
-    public void setGroupName(View view) {
+    public void setGroupName(String name, String id) {
         SharedPreferences.Editor edit = sp.edit();
-        String[] set = nameText.getText().toString().split("\n");
         edit.remove("group");
         edit.remove("groupId");
         edit.apply();
-        if(set.length == 1) {
-            String groupId;
-            db.beginTransaction();
-            db.execSQL("INSERT INTO "+groupId+"M values("+ipString+")");
-            db.endTransaction();
-        }
-        edit.putString("group", set[0]);
-        edit.putString("groupId", set[1]);
+        edit.putString("group", name);
+        edit.putString("groupId", id);
         edit.commit();
         recreate();
     }

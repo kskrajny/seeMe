@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".GroupActivity"
+    tools:context=".NewGroupActivity"
     android:orientation="vertical">
 
     <include layout="@layout/header" />
@@ -17,29 +17,24 @@
         android:layout_marginBottom="30dp"
         android:orientation="vertical" >
 
-        <Button
+        <EditText
+            android:id="@+id/name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="@string/new_group"
-            android:onClick="newGroup" />
+            tools:ignore="MissingConstraints"
+            android:hint="@string/lama"
+            android:inputType="text"
+            android:importantForAutofill="no"
+            android:gravity="center"/>
 
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="@string/change_group"
-            android:onClick="changeGroup" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="@string/add_member"
-            android:onClick="addMember" />
+            android:text="@string/set_name"
+            android:onClick="setName" />
 
     </LinearLayout>
 

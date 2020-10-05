@@ -26,6 +26,11 @@ public class GroupActivity extends AppCompatActivity {
         setHeaderFooter();
     }
 
+    public void newGroup(View view) {
+        Intent myIntent = new Intent(GroupActivity.this, NewGroupActivity.class);
+        startActivity(myIntent);
+    }
+
     public void changeGroup(View view) {
         Intent myIntent = new Intent(GroupActivity.this, ChangeGroupActivity.class);
         startActivity(myIntent);
