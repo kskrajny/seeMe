@@ -210,7 +210,7 @@ public class UdpService extends Service {
                 !set[4].matches(getString(R.string.goodChars)))
             throw new Exception();
         Cursor c = db.rawQuery("SELECT password FROM chats WHERE ip=?", new String[] { set[1] });
-        String password = c.getString(c.getInt(c.getColumnIndex("password")));
+        String password = c.getString(c.getColumnIndex("password"));
         if(!password.equals(set[3]))
             throw new Exception();
         String date = DateFormat.format("MM/dd/yyyy", d.getTime()).toString();

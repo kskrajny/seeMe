@@ -42,13 +42,12 @@ public class DayToSeeActivity extends AppCompatActivity {
     }
 
     public void setHeaderFooter() {
-        SharedPreferences spGroup = getSharedPreferences("group", MODE_PRIVATE);
-        String groupName = spGroup.getString("curr_group", "lama");
-        SharedPreferences spName = getSharedPreferences("name", MODE_PRIVATE);
-        String name = spName.getString("name", "Anonymous");
+        SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+        String group = sp.getString("group", "private");
+        String user = sp.getString("user", "anonymous");
         TextView header = findViewById(R.id.headerText);
         TextView footer = findViewById(R.id.footerText);
-        header.setText(name);
-        footer.setText(groupName);
+        header.setText(user);
+        footer.setText(group);
     }
 }

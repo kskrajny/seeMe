@@ -1,26 +1,28 @@
 package com.skrajny.seeme;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.TreeSet;
 
 public class AddMemberActivity extends AppCompatActivity {
 
     EditText ipText;
     EditText passwordText;
-    SharedPreferences spGroup;
-    String groupName;
+    SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+    SQLiteDatabase db = openOrCreateDatabase("db",MODE_PRIVATE,null);
+    String groupId;
+    String group;
     String password;
-    SharedPreferences spMembers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,9 +30,8 @@ public class AddMemberActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_member);
         ipText = findViewById(R.id.ip);
         passwordText = findViewById(R.id.password);
-        spGroup = getSharedPreferences("group", MODE_PRIVATE);
-        groupName = spGroup.getString("curr_group", "lama");
-        spMembers = getSharedPreferences("members"+groupName, MODE_PRIVATE);
+        group = sp.getString("group", "private");
+        groupId = sp.getString("groupId", "private");
     }
 
     public void addMember(View view) {
@@ -46,25 +47,40 @@ public class AddMemberActivity extends AppCompatActivity {
             //TODO obsłużyć wyjątek
         } else {
             // save new member locally
-            SharedPreferences.Editor edit = spMembers.edit();
-            edit.putString(ipString, ".");
-            edit.commit();
+            db.beginTransaction();
+            db.execSQL("INSERT INTO "+groupId+"M values("+ipString+")");
+            db.endTransaction();
             // invite new member to join group
             Intent myIntent = new Intent(AddMemberActivity.this, SendMessageActivity.class);
-            myIntent.putExtra("mess", "invite "+groupName+" "+password);
+            myIntent.putExtra("mess", createMessage(new String[] {"2", groupId, password, group}));
             startActivity(myIntent);
             // send members data to the new friend
-            Intent myIntent1 = new Intent(AddMemberActivity.this, SendMessageActivity.class);
-            myIntent1.putExtra("mess", "member "+groupName+" "+ipString);
-            startActivity(myIntent1);
             // send data of the new friend to old members
-            for(String x : spMembers.getAll().keySet()) {
-                Intent myIntent2 = new Intent(AddMemberActivity.this, SendMessageActivity.class);
-                myIntent2.putExtra("mess", "member "+groupName+" "+ipString);
-                myIntent2.putExtra("address", ipString);
-                startActivity(myIntent2);
+            Cursor c = db.rawQuery("SELECT ip FROM "+groupId+"M", new String[] {} );
+            while (c.moveToNext()) {
+                String ip = c.getString(c.getColumnIndex("ip"));
+                Intent myIntent1 = new Intent(AddMemberActivity.this, SendMessageActivity.class);
+                myIntent1.putExtra(
+                        "mess",
+                        createMessage(new String[] {"1", groupId, ip })
+                );
+                myIntent1.putExtra("address", ipString);
+                startActivity(myIntent1);
             }
-            //TODO przeniesc komunikacje do UdpService
+            Intent myIntent2 = new Intent(AddMemberActivity.this, SendMessageActivity.class);
+            myIntent2.putExtra(
+                    "mess",
+                    createMessage(new String[] {"1", groupId, ipString })
+            );
+            startActivity(myIntent2);
         }
+    }
+
+    public String createMessage(String[] args) {
+        StringBuilder mess = new StringBuilder();
+        for(String x : args){
+            mess.append(x);
+        }
+        return mess.toString();
     }
 }

@@ -33,8 +33,8 @@ public class NameActivity extends AppCompatActivity {
 
     public void setHeaderFooter() {
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String group = sp.getString("curr_group", "private");
-        String user = sp.getString("curr_user", "anonymous");
+        String group = sp.getString("group", "private");
+        String user = sp.getString("user", "anonymous");
         TextView header = findViewById(R.id.headerText);
         TextView footer = findViewById(R.id.footerText);
         header.setText(user);

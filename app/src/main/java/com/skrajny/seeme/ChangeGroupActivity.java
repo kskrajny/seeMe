@@ -1,14 +1,13 @@
 package com.skrajny.seeme;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.TreeSet;
 
@@ -56,13 +55,12 @@ public class ChangeGroupActivity extends AppCompatActivity {
     }
 
     public void setHeaderFooter() {
-        SharedPreferences spGroup = getSharedPreferences("group", MODE_PRIVATE);
-        String groupName = spGroup.getString("curr_group", "lama");
-        SharedPreferences spName = getSharedPreferences("name", MODE_PRIVATE);
-        String name = spName.getString("name", "Anonymous");
+        SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+        String group = sp.getString("group", "private");
+        String user = sp.getString("user", "anonymous");
         TextView header = findViewById(R.id.headerText);
         TextView footer = findViewById(R.id.footerText);
-        header.setText(name);
-        footer.setText(groupName);
+        header.setText(user);
+        footer.setText(group);
     }
 }
