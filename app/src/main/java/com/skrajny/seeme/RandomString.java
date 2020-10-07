@@ -5,7 +5,7 @@ package com.skrajny.seeme;
 
 public class RandomString {
 
-    static int n;
+    static int n  = 15;
 
     // function to generate a random string of length n
     static String getAlphaNumericString() {

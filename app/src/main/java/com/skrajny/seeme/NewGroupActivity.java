@@ -1,7 +1,6 @@
 package com.skrajny.seeme;
 
 import android.content.SharedPreferences;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -12,22 +11,21 @@ import androidx.appcompat.app.AppCompatActivity;
 public class NewGroupActivity extends AppCompatActivity {
 
     EditText nameText;
-    SQLiteDatabase db = openOrCreateDatabase("db",MODE_PRIVATE,null);
+    DatabaseHandler db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_group);
         nameText = findViewById(R.id.name);
+        db = DatabaseHandler.getInstance(this);
         setHeaderFooter();
     }
 
     public void setName(View view) {
         String name = nameText.getText().toString();
         String id = RandomString.getAlphaNumericString();
-        db.beginTransaction();
-        db.execSQL("INSERT INTO groups values("+id+", "+name+")");
-        db.endTransaction();
+        db.addGroup(name, id);
     }
 
     public void setHeaderFooter() {

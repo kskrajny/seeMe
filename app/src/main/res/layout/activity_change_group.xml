@@ -16,24 +16,6 @@
         android:layout_marginBottom="30dp"
         android:orientation="vertical" >
 
-        <EditText
-            android:id="@+id/groupName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="@string/lama"
-            android:gravity="center"
-            android:importantForAutofill="no"
-            android:inputType="text"
-            tools:ignore="MissingConstraints" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="setGroupName"
-            android:text="@string/set_name" />
-
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

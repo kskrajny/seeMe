@@ -23,8 +23,8 @@ public class ChangeGroupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_change_group);
         layout = findViewById(R.id.layout);
-        sp = getSharedPreferences("settings", MODE_PRIVATE);;
-        db = new DatabaseHandler(this);
+        sp = getSharedPreferences("settings", MODE_PRIVATE);
+        db = DatabaseHandler.getInstance(this);
         List<Pair<String, String>> list = db.getGroups();
         Log.i("seeme", list.toString());
         for (Pair<String, String> x : list) {
