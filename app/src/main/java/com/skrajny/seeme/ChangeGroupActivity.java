@@ -2,7 +2,6 @@ package com.skrajny.seeme;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -26,7 +25,6 @@ public class ChangeGroupActivity extends AppCompatActivity {
         sp = getSharedPreferences("settings", MODE_PRIVATE);
         db = DatabaseHandler.getInstance(this);
         List<Pair<String, String>> list = db.getGroups();
-        Log.i("seeme", list.toString());
         for (Pair<String, String> x : list) {
             final String name = x.first;
             final String id = x.second;

@@ -22,6 +22,11 @@
     <string name="change_group">change group</string>
     <string name="add_member">add member</string>
     <string name="lama">lama</string>
+    <string name="ip">0.0.0.0</string>
     <string name="set_group">set group</string>
     <string name="goodChars">^[a-zA-Z0-9]+$</string>
+    <string name="pass">*****</string>
+    <string name="set_password">set password</string>
+    <string name="set_name_password">set name and password</string>
+    <string name="group_settings">group settings</string>
 </resources>

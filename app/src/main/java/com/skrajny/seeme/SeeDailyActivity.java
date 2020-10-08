@@ -4,7 +4,6 @@ import android.content.SharedPreferences;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -22,7 +21,7 @@ public class SeeDailyActivity extends AppCompatActivity {
     LinearLayout layout;
     SharedPreferences sp;
     ViewGroup.LayoutParams params;
-    String group;
+    String groupId;
     List<Date> hours;
     List<DatabaseHandler.TimeSpan> list;
     DatabaseHandler db;
@@ -36,12 +35,14 @@ public class SeeDailyActivity extends AppCompatActivity {
         textView.setText(date);
         layout = findViewById(R.id.layoutDaily);
         sp = getSharedPreferences("settings", MODE_PRIVATE);
-        group = sp.getString("group", "lama");
+        groupId = sp.getString("groupId", null);
+        if(groupId == null)
+            finish();
         params = findViewById(R.id.exampleViewSeeDaily).getLayoutParams();
         hours = getHours();
         setHeaderFooter();
         db = DatabaseHandler.getInstance(this);
-        list = db.getDates(group);
+        list = db.getDates(groupId);
         fillTimeLayout(layout);
     }
 
@@ -76,15 +77,12 @@ public class SeeDailyActivity extends AppCompatActivity {
             dateView.setText(str);
             TextView countView = new TextView(this);
             int id = (int)hash(str);
-            Log.i("seeme", id+" "+str);
             countView.setId(id);
             countView.setTextSize(15);
             countView.setLayoutParams(params);
             int count = 0;
             for (DatabaseHandler.TimeSpan y : list) {
-                int hash1 = (int)hash(sdf.format(y.date1));
-                int hash2 = (int)hash(sdf.format(y.date2));
-                if(hash1 <=  id && hash2 >= id) {
+                if(!y.date1.before(x) && !x.after(y.date2)) {
                     count++;
                 }
             }

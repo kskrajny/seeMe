@@ -22,8 +22,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@android:color/holo_green_light"
-            android:onClick="setName"
-            android:text="@string/set_name" />
+            android:onClick="setNamePassword"
+            android:text="@string/set_name_password" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:layout_width="match_parent"
@@ -47,7 +47,7 @@
             android:layout_weight="1"
             android:background="@android:color/holo_purple"
             android:onClick="setGroup"
-            android:text="@string/set_group" />
+            android:text="@string/group_settings" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:layout_width="match_parent"

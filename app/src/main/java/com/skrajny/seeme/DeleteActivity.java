@@ -30,8 +30,10 @@ public class DeleteActivity extends AppCompatActivity {
         db = DatabaseHandler.getInstance(this);
         setHeaderFooter();
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String group = sp.getString("group", "private");
-        List<String> list = db.getDatesToDelete(group);
+        String groupId = sp.getString("groupId", null);
+        if(groupId == null)
+            finish();
+        List<String> list = db.getDatesToDelete(groupId);
         for(final String x :list) {
             final TextView textView = new TextView(this);
             textView.setText(x);
@@ -56,8 +58,8 @@ public class DeleteActivity extends AppCompatActivity {
 
     public void delete(View view) {
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String group = sp.getString("group", "private");
-        db.deleteDate(group, toDelete);
+        String groupId = sp.getString("groupId", null);
+        db.deleteDate(groupId, toDelete);
         recreate();
     }
 

@@ -8,17 +8,22 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class NameActivity extends AppCompatActivity {
+public class NamePasswordActivity extends AppCompatActivity {
 
     SharedPreferences sp;
     EditText nameText;
+    EditText passwordText;
+    TextView currPass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_name);
+        setContentView(R.layout.activity_name_password);
         nameText = findViewById(R.id.name);
+        passwordText = findViewById(R.id.password);
+        currPass = findViewById(R.id.curr_password);
         sp = getSharedPreferences("settings", MODE_PRIVATE);
+        currPass.setText(sp.getString("password", "password"));
         setHeaderFooter();
     }
 
@@ -29,6 +34,14 @@ public class NameActivity extends AppCompatActivity {
         edit.putString("user", newName);
         edit.apply();
         setHeaderFooter();
+    }
+
+    public void setPassword(View view) {
+        SharedPreferences.Editor edit = sp.edit();
+        String newPassword = passwordText.getText().toString();
+        edit.remove("password");
+        edit.putString("password", newPassword);
+        edit.apply();
     }
 
     public void setHeaderFooter() {

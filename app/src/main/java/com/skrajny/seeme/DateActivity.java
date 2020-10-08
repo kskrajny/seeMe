@@ -123,15 +123,17 @@ public class DateActivity extends AppCompatActivity {
                 return;
             }
         }
-        //TODO dac group ID do SharedPreference
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String groupID = sp.getString("groupID", "private");
+        String groupId = sp.getString("groupId", null);
+        if(groupId == null)
+            finish();
         String user = sp.getString("user", "anonymous");
         String date1 = tabDate[0]+" "+tabTime[0];
         String date2 = tabDate[1]+" "+tabTime[1];
-        db.addDate(groupID, user, date1, date2);
+        db.addDate(groupId, user, date1, date2);
         Intent myIntent = new Intent(DateActivity.this, SendMessageActivity.class);
-        myIntent.putExtra("mess", user+" "+date1+" "+date2+" "+groupID);
+        myIntent.putExtra("mess", "3 "+user+" "+date1+" "+date2+" "+groupId);
+        myIntent.putExtra("where", groupId);
         startActivity(myIntent);
         finish();
     }

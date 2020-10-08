@@ -34,7 +34,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:text="@string/set_name"
-            android:onClick="setName" />
+            android:onClick="setGroupName" />
 
         <TextView
             android:layout_width="match_parent"

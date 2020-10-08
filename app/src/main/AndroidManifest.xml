@@ -33,7 +33,7 @@
         <activity android:name=".TimeActivity" />
         <activity android:name=".DeleteActivity" />
         <activity android:name=".DateActivity" />
-        <activity android:name=".NameActivity" />
+        <activity android:name=".NamePasswordActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

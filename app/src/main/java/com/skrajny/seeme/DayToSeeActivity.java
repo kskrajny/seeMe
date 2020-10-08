@@ -35,8 +35,10 @@ public class DayToSeeActivity extends AppCompatActivity {
         calendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
-                StringBuffer buf = new StringBuffer();
-                chosen.setText(sdf.format(calendar.getDate()).toString());
+                Calendar cal = Calendar.getInstance();
+                cal.set(year, month, dayOfMonth);
+                calendar.setDate(cal.getTimeInMillis());
+                chosen.setText(sdf.format(calendar.getDate()));
                 setDayToSee.setVisibility(View.VISIBLE);
             }
         });

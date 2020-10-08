@@ -6,12 +6,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
+import android.util.Pair;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -21,31 +27,29 @@ import static java.lang.Integer.parseInt;
 public class UdpService extends Service {
 
     DatabaseHandler db;
-    InetAddress inetAddr;
     DatagramSocket socket1;
     DatagramSocket socket2;
-    final int remotePort = 10001;
     final Binder binder = new LocalBinder();
-    final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
-    SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+    final BlockingQueue<Pair<String, String>> queue = new LinkedBlockingQueue<>();
+    SharedPreferences sp;
+    int port1 = 9090;
+    int port2 = 9091;
 
     @SuppressLint("SimpleDateFormat")
-    SimpleDateFormat sdfrmt = new SimpleDateFormat("MM/dd/yyyy");
+    SimpleDateFormat sdfrmt = new SimpleDateFormat("yyyy-MM-dd HH:mm");
     Date d = new Date();
 
     @Override
     public void onCreate() {
-        db = DatabaseHandler.getInstance(this);
         super.onCreate();
+        sp = getSharedPreferences("settings", MODE_PRIVATE);
+        db = DatabaseHandler.getInstance(this);
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
         try {
-            String remoteAddr = "192.168.8.101";
-            inetAddr = InetAddress.getByName(remoteAddr);
-            int port1 = 9090;
             socket1 = new DatagramSocket(port1);
-            int port2 = 9091;
+            socket1.setSoTimeout(3000);
             socket2 = new DatagramSocket(port2);
             (new Thread(new udpClient())).start();
             (new Thread(new udpServer())).start();
@@ -57,16 +61,19 @@ public class UdpService extends Service {
 
     public class udpClient implements Runnable {
         public void run() {
+            Pair<String, String> p = null;
             //noinspection InfiniteLoopStatement
             while (true) {
                 try {
-                    String mess = queue.take();
+                    p = queue.take();
+                    String mess = p.first;
+                    String where = p.second;
                     String messID = "messID";
-                    sendMessage(socket1, remotePort, mess+messID);
+                    sendMessage(socket1, port2, mess+" "+messID, where);
                     getMessageClient(messID);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                } catch (SocketTimeoutException e) {
+                    queue.add(p);
+                } catch (Exception e) {}
             }
         }
     }
@@ -95,7 +102,22 @@ public class UdpService extends Service {
         return binder;
     }
 
-    public void sendMessage(DatagramSocket socket, int port, String mess) {
+    public void sendMessage(DatagramSocket socket, int port, String mess, String where) {
+        Log.i("UdpService", "SendMessage "+mess+" "+where);
+        InetAddress inetAddr = null;
+        try {
+            inetAddr = InetAddress.getByName(where);
+        } catch (UnknownHostException e) {
+            List<String> ip = db.getIp(where);
+            for(String x : ip) {
+                try {
+                    inetAddr = InetAddress.getByName(x);
+                    DatagramPacket packet = new DatagramPacket(mess.getBytes(), mess.length(), inetAddr, port);
+                    socket.send(packet);
+                } catch (Exception ex) { }
+            }
+            return;
+        }
         try {
             DatagramPacket packet = new DatagramPacket(mess.getBytes(), mess.length(), inetAddr, port);
             socket.send(packet);
@@ -104,21 +126,20 @@ public class UdpService extends Service {
         }
     }
 
-    public void getMessageClient(String messID) {
+    public void getMessageClient(String messID) throws Exception {
         byte[] buffer = new byte[32];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-        try {
-            socket1.receive(packet);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        socket1.receive(packet);
         String mess = new String(packet.getData()).replaceAll("\0", "");
         String[] set = mess.split(" ");
+        Log.i("udpService", "GetMessageClient "+mess);
         switch (parseInt(set[0])) {
             case 6:
+                /* $type=6 $messID */
                 handleAcknowledgment(mess, messID);
                 break;
             case 7:
+                /* $type=7 $messID */
                 handleRejection(mess, messID);
                 break;
             default:
@@ -127,7 +148,7 @@ public class UdpService extends Service {
     }
 
     public void getMessageServer() {
-        byte[] buffer = new byte[32];
+        byte[] buffer = new byte[100];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         try {
             socket2.receive(packet);
@@ -137,16 +158,21 @@ public class UdpService extends Service {
         }
         String mess = new String(packet.getData()).replaceAll("\0", "");
         String[] set = mess.split(" ");
+        Log.i("udpService", "GetMessageServer "+mess);
+        String where = null;
         try {
             switch (parseInt(set[0])) {
                 case 1:
-                    //handleNewMember(mess);
+                    /* $type=1 $groupId $ip $messID */
+                    where = handleNewMember(mess);
                     break;
                 case 2:
-                    handleInvitation(mess);
+                    /* $type=2 $groupId $password $groupName $messID */
+                    where = handleInvitation(mess);
                     break;
                 case 3:
-                    handleDate(mess);
+                    /* $type=3 $date1 $date2 $name $groupId $messID */
+                    where = handleDate(mess);
                     break;
                 case 4:
                     //handlePrivateInvitation(mess);
@@ -156,9 +182,10 @@ public class UdpService extends Service {
                     break;
             }
         } catch (Exception e) {
-            sendMessage(socket2, remotePort, "7 "+set[set.length-1]);
+            sendMessage(socket2, port1, "7 "+set[set.length-1], where);
+            return;
         }
-        sendMessage(socket2, remotePort, "6 "+set[set.length-1]);
+        sendMessage(socket2, port1, "6 "+set[set.length-1], where);
     }
 
     /*!!!!!!!!!!!! Handlers of responses */
@@ -167,7 +194,6 @@ public class UdpService extends Service {
             String[] set = mess.split(" ");
             assert(set.length == 2);
             assert(set[1].equals(messID)); // messID
-            queue.remove();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -179,7 +205,6 @@ public class UdpService extends Service {
             assert(set.length == 2);
             assert(set[1].equals(messID)); // messID
             //TODO make log
-            queue.remove();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -217,49 +242,54 @@ public class UdpService extends Service {
         db.endTransaction();
     }
     */
-    private void handleDate(String mess) throws Exception {
+
+    /* $type=3 $name $date1 $date2 $groupId $messID */
+    private String handleDate(String mess) throws Exception {
         String[] set = mess.split(" ");
-        Date javaDate1 = sdfrmt.parse(set[1]); // start
-        Date javaDate2 = sdfrmt.parse(set[2]); // stop
-        if(set.length != 6 ||
-                !set[3].matches(getString(R.string.goodChars)))
+        Date javaDate1 = sdfrmt.parse(set[2]+" "+set[3]);
+        Date javaDate2 = sdfrmt.parse(set[4]+" "+set[5]);
+        if(set.length != 8 ||
+                !set[1].matches(getString(R.string.goodChars)) ||
+                !set[7].matches(getString(R.string.goodChars)))
             throw new Exception();
-        if(!db.checkGroupID(set[4]))
+        if(!db.checkGroupID(set[6]))
             throw new Exception();
-        db.addDate(set[4], set[3], set[1], set[2]);
+        db.addDate(set[6], set[1], set[2]+" "+set[3], set[4]+" "+set[5]);
+        Log.i("seeme", "added");
+        return set[6];
     }
 
-    public void handleInvitation(String mess) throws Exception {
+    /* $type=2 $groupId $password $groupName $messID */
+    public String handleInvitation(String mess) throws Exception {
         String[] set = mess.split(" ");
         if(set.length != 5 ||
+                !set[1].matches(getString(R.string.goodChars)) ||
                 !set[3].matches(getString(R.string.goodChars)) ||
                 !set[4].matches(getString(R.string.goodChars)))
             throw new Exception();
-        if(!db.checkGroupID(set[4]))
-            throw new Exception();
-        String password = sp.getString("password", null);
+        String password = sp.getString("password", "password");
         if(!password.equals(set[2]))
             throw new Exception();
         db.addGroup(set[3], set[1]);
+        return set[1];
     }
-/*
-    public void handleNewMember(String mess) throws Exception {
+
+    /* $type=1 $groupId $ip $messID */
+    public String handleNewMember(String mess) throws Exception {
         String[] set = mess.split(" ");
         if(set.length != 4 ||
                 !(InetAddress.getByName(set[2]) instanceof Inet4Address) ||
-                set[3].matches(getString(R.string.goodChars)))
+                !set[3].matches(getString(R.string.goodChars)))
             throw new Exception();
-        Cursor c = db.rawQuery("SELECT id FROM groups WHERE id=?", new String[] { set[4] });
-        if(c.getCount() != 1)
+        if(!db.checkGroupID(set[1]))
             throw new Exception();
-        db.beginTransaction();
-        db.execSQL("INSERT INTO "+set[1]+"M values("+set[2]+")");
-        db.endTransaction();
+        db.addMember(set[1], set[2]);
+        return set[1];
     }
- */
+
     /*!!!!!!!!!!!! End of Handlers for server */
-    public void addMessage(String mess) {
-        queue.add(mess);
+    public void addMessage(String mess, String where) {
+        queue.add(new Pair(mess, where));
     }
 
 }

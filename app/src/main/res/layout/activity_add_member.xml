@@ -23,6 +23,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:inputType="text"
+            android:gravity="center"
+            android:hint="@string/ip"
             tools:ignore="MissingConstraints" />
 
         <EditText
@@ -31,6 +33,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:inputType="text"
+            android:gravity="center"
+            android:hint="@string/pass"
             tools:ignore="MissingConstraints" />
 
         <Button

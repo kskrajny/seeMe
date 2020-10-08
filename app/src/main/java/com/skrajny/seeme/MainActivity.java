@@ -10,15 +10,18 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    //TODO dodać możliwość ustawienia hasłą
+    //TODO usuwanie grupy
+    //TODO usuwanie dat przeszlych
+    //TODO usuwanie osob z grupy
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setHeaderFooter();
+        DatabaseHandler db = DatabaseHandler.getInstance(this, RandomString.getAlphaNumericString());
         Intent udpService = new Intent(MainActivity.this, UdpService.class);
-        //startService(udpService);
+        startService(udpService);
     }
 
     public void onResume() {
@@ -36,8 +39,8 @@ public class MainActivity extends AppCompatActivity {
         startActivity(myIntent);
     }
 
-    public void setName(View view) {
-        Intent myIntent = new Intent(MainActivity.this, NameActivity.class);
+    public void setNamePassword(View view) {
+        Intent myIntent = new Intent(MainActivity.this, NamePasswordActivity.class);
         startActivity(myIntent);
     }
 

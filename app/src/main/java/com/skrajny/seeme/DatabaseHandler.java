@@ -19,11 +19,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "database";
+    private static String private_id = null;
 
     private static final String TABLE_GROUPS = "groups";
     private static final String TABLE_MESSAGES = "messages";
     private static final String TABLE_CHATS = "chats";
     private static final String TABLE_DATES = "dates";
+    private static final String TABLE_MEMBERS = "members";
 
     private static final String KEY_ID = "id";
     private static final String KEY_NAME = "name";
@@ -36,26 +38,42 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final String groupsQuery = "SELECT * FROM "+TABLE_GROUPS;
     private static final String datesQuery = "SELECT * FROM "+TABLE_DATES;
+    private static final String ipQuery = "SELECT * FROM "+TABLE_MEMBERS;
     private static final String deleteFromDates = "DELETE FROM "
             +TABLE_DATES+"? WHERE "
             +KEY_NAME+"=? AND"
             +KEY_TIME_1+"=? AND"
             +KEY_TIME_2+"=?";
-    private static final String groupIDQuery = "SELECT id FROM"
-            +TABLE_GROUPS+" WHERE id=";
+    /*
+    private static final String groupIDQuery = "SELECT * FROM "
+            +TABLE_GROUPS+" WHERE "
+            +KEY_ID+"=?";
+    private static final String checkIP = "SELECT * FROM "
+            +TABLE_MEMBERS+"? WHERE "
+            +KEY_IP+"=?";
+     */
 
     private static DatabaseHandler sInstance;
 
-    public static synchronized DatabaseHandler getInstance(Context context) {
+    public DatabaseHandler(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
 
-        if (sInstance == null) {
+    public static synchronized DatabaseHandler getInstance(Context context, String priv_id) {
+        if(priv_id != null && private_id == null) {
+            private_id = priv_id;
+        }
+        if(sInstance == null) {
             sInstance = new DatabaseHandler(context.getApplicationContext());
         }
         return sInstance;
     }
 
-    private DatabaseHandler(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    public static synchronized DatabaseHandler getInstance(Context context) {
+        if(sInstance == null) {
+            sInstance = new DatabaseHandler(context.getApplicationContext());
+        }
+        return sInstance;
     }
 
     @Override
@@ -67,14 +85,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_GROUPS+"("
-                +KEY_ID+ " TEXT NOT NULL PRIMARY KEY, "
+                +KEY_ID+ " TEXT PRIMARY KEY, "
                 +KEY_NAME+ " TEXT NOT NULL);");
         db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_CHATS+"("
-                +KEY_IP+" TEXT NOT NULL PRIMARY KEY, "
+                +KEY_IP+" TEXT PRIMARY KEY, "
                 +KEY_NAME+" TEXT NOT NULL,"
                 +KEY_PASSWORD+" NOT NULL);");
         db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_MESSAGES+"("
-                +KEY_IP+" TEXT NOT NULL PRIMARY KEY, "
+                +KEY_IP+" TEXT PRIMARY KEY, "
                 +KEY_DAY+" INTEGER NOT NULL, "
                 +KEY_CONTENT+" text NOT NULL);");
         db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_DATES+"private ("
@@ -82,13 +100,15 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 +KEY_TIME_1+" TEXT NOT NULL, "
                 +KEY_TIME_2+" TEXT NOT NULL);");
         ContentValues values = new ContentValues();
-        values.put(KEY_ID, "private");
+        values.put(KEY_ID, private_id);
         values.put(KEY_NAME, "private");
         db.insertOrThrow(TABLE_GROUPS, null, values);
-        db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_DATES+"private ("
+        db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_DATES+private_id+" ("
                 +KEY_NAME+" TEXT, "
                 +KEY_TIME_1+" TEXT NOT NULL, "
                 +KEY_TIME_2+" TEXT NOT NULL);");
+        db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_MEMBERS+private_id+" ("
+                +KEY_IP+" TEXT PRIMARY KEY)");
     }
 
     @Override
@@ -150,6 +170,19 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return list;
     }
 
+    public List<String> getIp(String groupId) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(ipQuery+groupId, null);
+        List<String> list = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(cursor.getString(cursor.getColumnIndex(KEY_IP)));
+            } while (cursor.moveToNext());
+        }
+        db.close();
+        return list;
+    }
+
     public List<String> getDatesToDelete(String groupID) {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.rawQuery(datesQuery+groupID, null);
@@ -185,10 +218,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_NAME, name);
         try {
             db.insertOrThrow(TABLE_GROUPS, null, values);
-            db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_DATES+name+"("
+            db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_DATES+id+"("
                     +KEY_NAME+" TEXT, "
                     +KEY_TIME_1+" TEXT NOT NULL, "
                     +KEY_TIME_2+" TEXT NOT NULL);");
+            db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_MEMBERS+id+" ("
+                    +KEY_IP+" TEXT PRIMARY KEY)");
         } catch (Exception e) {
             Log.e("seeme", String.valueOf(e));
         } finally {
@@ -211,11 +246,34 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
     }
 
-    public boolean checkGroupID(String groupID) {
+    public void addMember(String groupID, String ip) {
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(KEY_IP, ip);
+        try {
+            db.insertOrThrow(TABLE_MEMBERS+groupID, null, values);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            db.close();
+        }
+    }
+
+    public boolean checkGroupID(String groupId) {
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.rawQuery(groupIDQuery+groupID, null);
-        List<String> list = new ArrayList<>();
+        Cursor cursor = db.rawQuery("SELECT * FROM groups WHERE id=\""+groupId+"\"", null);
+        //Cursor cursor = db.rawQuery(groupIDQuery, new String[] {groupId});
+        boolean ret = cursor.getCount() == 1;
         db.close();
-        return cursor.getCount() == 1;
+        return ret;
+    }
+
+    public boolean checkIP(String groupId, String ip) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM "
+                +TABLE_MEMBERS+groupId+" WHERE "+KEY_IP+"=\""+ip+"\"", null);
+        boolean ret = cursor.getCount() == 1;
+        db.close();
+        return ret;
     }
 }

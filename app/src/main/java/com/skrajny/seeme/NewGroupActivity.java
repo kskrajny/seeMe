@@ -22,7 +22,7 @@ public class NewGroupActivity extends AppCompatActivity {
         setHeaderFooter();
     }
 
-    public void setName(View view) {
+    public void setGroupName(View view) {
         String name = nameText.getText().toString();
         String id = RandomString.getAlphaNumericString();
         db.addGroup(name, id);
