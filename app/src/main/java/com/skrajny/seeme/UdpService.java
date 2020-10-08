@@ -4,15 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Binder;
 import android.os.IBinder;
-import android.text.format.DateFormat;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,7 +20,7 @@ import static java.lang.Integer.parseInt;
 
 public class UdpService extends Service {
 
-    SQLiteDatabase db = openOrCreateDatabase("db",MODE_PRIVATE,null);
+    DatabaseHandler db;
     InetAddress inetAddr;
     DatagramSocket socket1;
     DatagramSocket socket2;
@@ -39,6 +35,7 @@ public class UdpService extends Service {
 
     @Override
     public void onCreate() {
+        db = DatabaseHandler.getInstance(this);
         super.onCreate();
     }
 
@@ -143,7 +140,7 @@ public class UdpService extends Service {
         try {
             switch (parseInt(set[0])) {
                 case 1:
-                    handleNewMember(mess);
+                    //handleNewMember(mess);
                     break;
                 case 2:
                     handleInvitation(mess);
@@ -152,10 +149,10 @@ public class UdpService extends Service {
                     handleDate(mess);
                     break;
                 case 4:
-                    handlePrivateInvitation(mess);
+                    //handlePrivateInvitation(mess);
                     break;
                 case 5:
-                    handlePrivateMessage(mess);
+                    //handlePrivateMessage(mess);
                     break;
             }
         } catch (Exception e) {
@@ -190,6 +187,7 @@ public class UdpService extends Service {
     /*!!!!!!!!!!!! Handlers of responses */
 
     /*!!!!!!!!!!!! Handlers of messages coming to server */
+    /*
     private void handlePrivateInvitation(String mess) throws Exception {
         String[] set = mess.split(" ");
         if(set.length != 5 ||
@@ -218,8 +216,7 @@ public class UdpService extends Service {
         db.execSQL("INSERT INTO messages values("+set[1]+","+date+","+set[2]+")");
         db.endTransaction();
     }
-
-
+    */
     private void handleDate(String mess) throws Exception {
         String[] set = mess.split(" ");
         Date javaDate1 = sdfrmt.parse(set[1]); // start
@@ -227,12 +224,9 @@ public class UdpService extends Service {
         if(set.length != 6 ||
                 !set[3].matches(getString(R.string.goodChars)))
             throw new Exception();
-        Cursor c = db.rawQuery("SELECT id FROM groups WHERE id=?", new String[] { set[4] });
-        if(c.getCount() != 1)
+        if(!db.checkGroupID(set[4]))
             throw new Exception();
-        db.beginTransaction();
-        db.execSQL("INSERT INTO "+set[4]+"A values("+set[1]+","+set[2]+","+set[3]+")");
-        db.endTransaction();
+        db.addDate(set[4], set[3], set[1], set[2]);
     }
 
     public void handleInvitation(String mess) throws Exception {
@@ -241,17 +235,14 @@ public class UdpService extends Service {
                 !set[3].matches(getString(R.string.goodChars)) ||
                 !set[4].matches(getString(R.string.goodChars)))
             throw new Exception();
-        Cursor c = db.rawQuery("SELECT id FROM groups WHERE id=?", new String[] { set[4] });
-        if(c.getCount() != 1)
+        if(!db.checkGroupID(set[4]))
             throw new Exception();
         String password = sp.getString("password", null);
-        if(!password.equals(2))
+        if(!password.equals(set[2]))
             throw new Exception();
-        db.beginTransaction();
-        db.execSQL("INSERT INTO groups values("+set[1]+","+set[3]+")");
-        db.endTransaction();
+        db.addGroup(set[3], set[1]);
     }
-
+/*
     public void handleNewMember(String mess) throws Exception {
         String[] set = mess.split(" ");
         if(set.length != 4 ||
@@ -265,8 +256,8 @@ public class UdpService extends Service {
         db.execSQL("INSERT INTO "+set[1]+"M values("+set[2]+")");
         db.endTransaction();
     }
+ */
     /*!!!!!!!!!!!! End of Handlers for server */
-
     public void addMessage(String mess) {
         queue.add(mess);
     }

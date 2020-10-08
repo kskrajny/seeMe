@@ -2,11 +2,15 @@ package com.skrajny.seeme;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.icu.text.SimpleDateFormat;
+import android.icu.util.Calendar;
+import android.icu.util.TimeZone;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class DayToSeeActivity extends AppCompatActivity {
@@ -14,6 +18,7 @@ public class DayToSeeActivity extends AppCompatActivity {
     TextView chosen;
     CalendarView calendar;
     Button setDayToSee;
+    SimpleDateFormat sdf;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,12 +27,16 @@ public class DayToSeeActivity extends AppCompatActivity {
         chosen = findViewById(R.id.chosen);
         calendar = findViewById(R.id.calendarToSee);
         setDayToSee = findViewById(R.id.setDayToSee);
+        calendar.setMinDate(System.currentTimeMillis());
+        Calendar c = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        c.add(Calendar.MONTH, 1);
+        calendar.setMaxDate(c.getTimeInMillis());
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
         calendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
-                month++;
-                String date = dayOfMonth + "/" + month;
-                chosen.setText(date);
+                StringBuffer buf = new StringBuffer();
+                chosen.setText(sdf.format(calendar.getDate()).toString());
                 setDayToSee.setVisibility(View.VISIBLE);
             }
         });

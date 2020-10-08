@@ -30,7 +30,6 @@ public class ChangeGroupActivity extends AppCompatActivity {
         for (Pair<String, String> x : list) {
             final String name = x.first;
             final String id = x.second;
-            Log.i("seeme", name);
             final TextView textView = new TextView(this);
             textView.setText(name);
             textView.setTextSize(20);

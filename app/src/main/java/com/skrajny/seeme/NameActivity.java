@@ -2,15 +2,15 @@ package com.skrajny.seeme;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class NameActivity extends AppCompatActivity {
 
-    SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+    SharedPreferences sp;
     EditText nameText;
 
     @Override
@@ -18,6 +18,7 @@ public class NameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_name);
         nameText = findViewById(R.id.name);
+        sp = getSharedPreferences("settings", MODE_PRIVATE);
         setHeaderFooter();
     }
 
@@ -27,7 +28,6 @@ public class NameActivity extends AppCompatActivity {
         edit.remove("user");
         edit.putString("user", newName);
         edit.apply();
-        Log.i("seeme", newName);
         setHeaderFooter();
     }
 

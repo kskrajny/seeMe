@@ -1,5 +1,6 @@
 package com.skrajny.seeme;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
@@ -122,12 +123,16 @@ public class DateActivity extends AppCompatActivity {
                 return;
             }
         }
+        //TODO dac group ID do SharedPreference
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String group = sp.getString("group", "private");
+        String groupID = sp.getString("groupID", "private");
         String user = sp.getString("user", "anonymous");
         String date1 = tabDate[0]+" "+tabTime[0];
         String date2 = tabDate[1]+" "+tabTime[1];
-        db.addDate(group, user, date1, date2);
+        db.addDate(groupID, user, date1, date2);
+        Intent myIntent = new Intent(DateActivity.this, SendMessageActivity.class);
+        myIntent.putExtra("mess", user+" "+date1+" "+date2+" "+groupID);
+        startActivity(myIntent);
         finish();
     }
 
