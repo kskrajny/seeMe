@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -16,7 +17,6 @@ import java.util.List;
 
 public class SeeDailyActivity extends AppCompatActivity {
 
-    String date;
     TextView textView;
     LinearLayout layout;
     SharedPreferences sp;
@@ -30,27 +30,31 @@ public class SeeDailyActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_see_daily);
-        date = getIntent().getExtras().getString("date");
+        Long l = getIntent().getExtras().getLong("date");
+        Log.i("seeme", ""+l);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         textView = findViewById(R.id.dateToSee);
-        textView.setText(date);
+        textView.setText(sdf.format(l));
         layout = findViewById(R.id.layoutDaily);
         sp = getSharedPreferences("settings", MODE_PRIVATE);
         groupId = sp.getString("groupId", null);
         if(groupId == null)
             finish();
         params = findViewById(R.id.exampleViewSeeDaily).getLayoutParams();
-        hours = getHours();
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(l);
+        hours = getHours(cal);
         setHeaderFooter();
         db = DatabaseHandler.getInstance(this);
         list = db.getDates(groupId);
         fillTimeLayout(layout);
     }
 
-    private static List<Date> getHours() {
+    private static List<Date> getHours(Calendar calendar) {
         ArrayList<Date> dates = new ArrayList<Date>();
 
-        Calendar cal1 = Calendar.getInstance();
-        Calendar cal2 = Calendar.getInstance();
+        Calendar cal1 = (Calendar) calendar.clone();
+        Calendar cal2 = (Calendar) calendar.clone();
 
         cal1.set(Calendar.HOUR_OF_DAY, 0);
         cal2.set(Calendar.HOUR_OF_DAY, 23);
@@ -82,7 +86,7 @@ public class SeeDailyActivity extends AppCompatActivity {
             countView.setLayoutParams(params);
             int count = 0;
             for (DatabaseHandler.TimeSpan y : list) {
-                if(!y.date1.before(x) && !x.after(y.date2)) {
+                if(!x.before(y.date1) && !x.after(y.date2)) {
                     count++;
                 }
             }

@@ -13,6 +13,7 @@ public class MainActivity extends AppCompatActivity {
     //TODO usuwanie grupy
     //TODO usuwanie dat przeszlych
     //TODO usuwanie osob z grupy
+    //TODO pozbycie sie Date, zmiana na Calendar
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -19,6 +19,7 @@ public class DayToSeeActivity extends AppCompatActivity {
     CalendarView calendar;
     Button setDayToSee;
     SimpleDateFormat sdf;
+    Calendar cal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +27,7 @@ public class DayToSeeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_day_to_see);
         chosen = findViewById(R.id.chosen);
         calendar = findViewById(R.id.calendarToSee);
+        cal = Calendar.getInstance();
         setDayToSee = findViewById(R.id.setDayToSee);
         calendar.setMinDate(System.currentTimeMillis());
         Calendar c = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
@@ -35,7 +37,6 @@ public class DayToSeeActivity extends AppCompatActivity {
         calendar.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
             @Override
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
-                Calendar cal = Calendar.getInstance();
                 cal.set(year, month, dayOfMonth);
                 calendar.setDate(cal.getTimeInMillis());
                 chosen.setText(sdf.format(calendar.getDate()));
@@ -47,7 +48,7 @@ public class DayToSeeActivity extends AppCompatActivity {
 
     public void setDayToSee(View view) {
         Intent myIntent = new Intent(DayToSeeActivity.this, SeeDailyActivity.class);
-        myIntent.putExtra("date", chosen.getText());
+        myIntent.putExtra("date", cal.getTimeInMillis());
         startActivity(myIntent);
         finish();
     }
