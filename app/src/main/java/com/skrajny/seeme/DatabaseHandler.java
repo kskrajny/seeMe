@@ -38,6 +38,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private static final String groupsQuery = "SELECT * FROM "+TABLE_GROUPS;
     private static final String datesQuery = "SELECT * FROM "+TABLE_DATES;
+    private static final String membersQuery = "SELECT * FROM "+TABLE_MEMBERS;
     private static final String ipQuery = "SELECT * FROM "+TABLE_MEMBERS;
     private static final String deleteFromDates = "DELETE FROM "
             +TABLE_DATES+"? WHERE "
@@ -60,7 +61,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public static synchronized DatabaseHandler getInstance(Context context, String priv_id) {
-        if(priv_id != null && private_id == null) {
+        if(private_id == null) {
             private_id = priv_id;
         }
         if(sInstance == null) {
@@ -140,6 +141,19 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return list;
     }
 
+    public List<String> getMembers(String groupId) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery(membersQuery+groupId, null);
+        List<String> list = new ArrayList<>();
+        if (cursor.moveToFirst()) {
+            do {
+                list.add(cursor.getString(cursor.getColumnIndex(KEY_IP)));
+            } while (cursor.moveToNext());
+        }
+        db.close();
+        return list;
+    }
+
     public class TimeSpan {
         Date date1;
         Date date2;
@@ -207,6 +221,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 +KEY_NAME+"=\""+set[0]+"\" AND "
                 +KEY_TIME_1+"=\""+set[1]+" "+set[2]+"\" AND "
                 +KEY_TIME_2+"=\""+set[3]+" "+set[4]+"\"");
+    }
+
+    public void deleteGroup(String groupId) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("DELETE FROM "
+                +TABLE_GROUPS+" WHERE "
+                +KEY_ID+"=\""+groupId+"\"");
+        db.execSQL("DROP TABLE "+TABLE_DATES+groupId);
+        db.execSQL("DROP TABLE "+TABLE_MEMBERS+groupId);
+    }
+
+    public void deleteMember(String groupId, String ip) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.execSQL("DELETE FROM "
+                +TABLE_MEMBERS+groupId+" WHERE "
+                +KEY_IP+"=\""+ip+"\"");
     }
 
     public void addGroup(String name, String id) {

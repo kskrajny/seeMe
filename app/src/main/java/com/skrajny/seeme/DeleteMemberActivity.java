@@ -13,36 +13,31 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.List;
 
-import static com.skrajny.seeme.R.layout.activity_delete;
-
-public class DeleteActivity extends AppCompatActivity {
+public class DeleteMemberActivity extends AppCompatActivity {
 
     LinearLayout layout;
     Button delete;
     String toDelete;
     TextView textToDelete;
     DatabaseHandler db;
+    String groupId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(activity_delete);
+        setContentView(R.layout.activity_delete_member);
+        db = DatabaseHandler.getInstance(this);
         layout = findViewById(R.id.layout);
         delete = findViewById(R.id.delete);
-        toDelete = null;
-        db = DatabaseHandler.getInstance(this);
-        setHeaderFooter();
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String groupId = sp.getString("groupId", null);
-        if(groupId == null)
-            finish();
-        List<String> list = db.getDatesToDelete(groupId);
+        groupId = sp.getString("groupId", null);
+        List<String> list = db.getMembers(groupId);
         for(final String x :list) {
             final TextView textView = new TextView(this);
             textView.setText(x);
             textView.setPadding(0, 5, 0, 5);
             textView.setGravity(Gravity.CENTER);
-            textView.setTextSize(16);
+            textView.setTextSize(20);
             textView.setTextColor(Color.parseColor("#000000"));
             textView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -69,13 +64,13 @@ public class DeleteActivity extends AppCompatActivity {
             });
             layout.addView(textView);
         }
+        setHeaderFooter();
     }
 
     public void delete(View view) {
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String groupId = sp.getString("groupId", null);
-        db.deleteDate(groupId, toDelete);
-        recreate();
+        db.deleteMember(groupId, toDelete);
+        finish();
     }
 
     public void setHeaderFooter() {
@@ -87,4 +82,5 @@ public class DeleteActivity extends AppCompatActivity {
         header.setText(user);
         footer.setText(group);
     }
+
 }

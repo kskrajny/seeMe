@@ -77,6 +77,7 @@ public class AddMemberActivity extends AppCompatActivity {
             myIntent2.putExtra("where", groupId);
             startActivity(myIntent2);
         }
+        finish();
     }
 
     public String createMessage(String[] args) {

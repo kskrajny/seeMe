@@ -10,17 +10,27 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    //TODO usuwanie grupy
+    //TODO usuwanie wiadomosci do wyslania po jakims czasie
     //TODO usuwanie dat przeszlych
-    //TODO usuwanie osob z grupy
-    //TODO pozbycie sie Date, zmiana na Calendar
+    //TODO pozbycie sie klasy Date, zmiana na klase Calendar
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setHeaderFooter();
-        DatabaseHandler db = DatabaseHandler.getInstance(this, RandomString.getAlphaNumericString());
+        SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
+        String str = sp.getString("groupId", null);
+        if(str == null) {
+            String id =  RandomString.getAlphaNumericString();
+            SharedPreferences.Editor edit = sp.edit();
+            edit.putString("groupId", id);
+            edit.putString("privateGroupId", id);
+            edit.commit();
+            DatabaseHandler.getInstance(this, id);
+        }
+        DatabaseHandler.getInstance(this);
         Intent udpService = new Intent(MainActivity.this, UdpService.class);
         startService(udpService);
     }

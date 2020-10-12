@@ -3,6 +3,7 @@ package com.skrajny.seeme;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -13,36 +14,32 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.List;
 
-import static com.skrajny.seeme.R.layout.activity_delete;
-
-public class DeleteActivity extends AppCompatActivity {
+public class DeleteGroupActivity extends AppCompatActivity {
 
     LinearLayout layout;
     Button delete;
-    String toDelete;
+    Pair<String, String> toDelete;
     TextView textToDelete;
     DatabaseHandler db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(activity_delete);
+        setContentView(R.layout.activity_delete_group);
+        db = DatabaseHandler.getInstance(this);
         layout = findViewById(R.id.layout);
         delete = findViewById(R.id.delete);
-        toDelete = null;
-        db = DatabaseHandler.getInstance(this);
-        setHeaderFooter();
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String groupId = sp.getString("groupId", null);
-        if(groupId == null)
-            finish();
-        List<String> list = db.getDatesToDelete(groupId);
-        for(final String x :list) {
+        String privateGroupID = sp.getString("privateGroupId", null);
+        List<Pair<String, String>> list = db.getGroups();
+        for(final Pair<String, String> x :list) {
+            if(x.second.equals(privateGroupID))
+                continue;
             final TextView textView = new TextView(this);
-            textView.setText(x);
+            textView.setText(x.first+" "+x.second);
             textView.setPadding(0, 5, 0, 5);
             textView.setGravity(Gravity.CENTER);
-            textView.setTextSize(16);
+            textView.setTextSize(20);
             textView.setTextColor(Color.parseColor("#000000"));
             textView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -69,13 +66,20 @@ public class DeleteActivity extends AppCompatActivity {
             });
             layout.addView(textView);
         }
+        setHeaderFooter();
     }
 
     public void delete(View view) {
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
-        String groupId = sp.getString("groupId", null);
-        db.deleteDate(groupId, toDelete);
-        recreate();
+        db.deleteGroup(toDelete.second);
+        SharedPreferences.Editor edit = sp.edit();
+        edit.remove("group");
+        edit.remove("groupId");
+        edit.apply();
+        edit.putString("group", "private");
+        edit.putString("groupId", sp.getString("privateGroupId", null));
+        edit.commit();
+        finish();
     }
 
     public void setHeaderFooter() {
@@ -87,4 +91,5 @@ public class DeleteActivity extends AppCompatActivity {
         header.setText(user);
         footer.setText(group);
     }
+
 }

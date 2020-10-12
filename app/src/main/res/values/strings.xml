@@ -29,4 +29,6 @@
     <string name="set_password">set password</string>
     <string name="set_name_password">set name and password</string>
     <string name="group_settings">group settings</string>
+    <string name="delete_member">delete member</string>
+    <string name="delete_group">delete group</string>
 </resources>

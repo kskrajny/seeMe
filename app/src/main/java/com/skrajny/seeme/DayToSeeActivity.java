@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class DayToSeeActivity extends AppCompatActivity {
 
-    TextView chosen;
     CalendarView calendar;
     Button setDayToSee;
     SimpleDateFormat sdf;
@@ -25,7 +24,6 @@ public class DayToSeeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_day_to_see);
-        chosen = findViewById(R.id.chosen);
         calendar = findViewById(R.id.calendarToSee);
         cal = Calendar.getInstance();
         setDayToSee = findViewById(R.id.setDayToSee);
@@ -39,7 +37,6 @@ public class DayToSeeActivity extends AppCompatActivity {
             public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
                 cal.set(year, month, dayOfMonth);
                 calendar.setDate(cal.getTimeInMillis());
-                chosen.setText(sdf.format(calendar.getDate()));
                 setDayToSee.setVisibility(View.VISIBLE);
             }
         });

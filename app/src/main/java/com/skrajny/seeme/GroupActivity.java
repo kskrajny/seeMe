@@ -40,6 +40,16 @@ public class GroupActivity extends AppCompatActivity {
         startActivity(myIntent);
     }
 
+    public void deleteGroup(View view) {
+        Intent myIntent = new Intent(GroupActivity.this, DeleteGroupActivity.class);
+        startActivity(myIntent);
+    }
+
+    public void deleteMember(View view) {
+        Intent myIntent = new Intent(GroupActivity.this, DeleteMemberActivity.class);
+        startActivity(myIntent);
+    }
+
     public void setHeaderFooter() {
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
         String group = sp.getString("group", "private");

@@ -26,6 +26,7 @@ public class NewGroupActivity extends AppCompatActivity {
         String name = nameText.getText().toString();
         String id = RandomString.getAlphaNumericString();
         db.addGroup(name, id);
+        finish();
     }
 
     public void setHeaderFooter() {

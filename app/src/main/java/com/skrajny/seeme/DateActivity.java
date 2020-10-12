@@ -103,9 +103,9 @@ public class DateActivity extends AppCompatActivity {
         if(x > 0) {
             tabDate[0] = null;
             tabDate[1] = null;
-            ovalDate[0].setBackgroundResource(R.drawable.purple_rectangle);
+            ovalDate[0].setBackgroundResource(R.drawable.dark_rectangle);
             ovalDate[0].setText("");
-            ovalDate[1].setBackgroundResource(R.drawable.purple_rectangle);
+            ovalDate[1].setBackgroundResource(R.drawable.dark_rectangle);
             ovalDate[1].setText("");
             count = 2;
             return;
@@ -115,9 +115,9 @@ public class DateActivity extends AppCompatActivity {
             if(y > 0) {
                 tabTime[0] = null;
                 tabTime[1] = null;
-                ovalTime[0].setBackgroundResource(R.drawable.purple_rectangle);
+                ovalTime[0].setBackgroundResource(R.drawable.dark_rectangle);
                 ovalTime[0].setText("");
-                ovalTime[1].setBackgroundResource(R.drawable.purple_rectangle);
+                ovalTime[1].setBackgroundResource(R.drawable.dark_rectangle);
                 ovalTime[1].setText("");
                 count = 2;
                 return;

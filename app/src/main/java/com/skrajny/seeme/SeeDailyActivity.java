@@ -4,7 +4,6 @@ import android.content.SharedPreferences;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -31,7 +30,6 @@ public class SeeDailyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_see_daily);
         Long l = getIntent().getExtras().getLong("date");
-        Log.i("seeme", ""+l);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         textView = findViewById(R.id.dateToSee);
         textView.setText(sdf.format(l));
