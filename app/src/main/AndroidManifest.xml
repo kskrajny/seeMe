@@ -17,7 +17,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".DeleteGroupActivity"></activity>
+        <service
+            android:name=".Cleaner"
+            android:enabled="true"
+            android:exported="true"></service>
+
+        <activity android:name=".DeleteGroupActivity" />
         <activity android:name=".DeleteMemberActivity" />
         <activity android:name=".NewGroupActivity" />
         <activity android:name=".AddMemberActivity" />

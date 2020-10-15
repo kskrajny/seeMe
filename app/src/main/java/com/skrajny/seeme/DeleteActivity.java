@@ -2,6 +2,7 @@ package com.skrajny.seeme;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.text.ParseException;
 import java.util.List;
 
 import static com.skrajny.seeme.R.layout.activity_delete;
@@ -74,7 +76,17 @@ public class DeleteActivity extends AppCompatActivity {
     public void delete(View view) {
         SharedPreferences sp = getSharedPreferences("settings", MODE_PRIVATE);
         String groupId = sp.getString("groupId", null);
-        db.deleteDate(groupId, toDelete);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String[] set = toDelete.split(" ");
+        long time1 = 0;
+        long time2 = 0;
+        try {
+            time1 = sdf.parse(set[1]+" "+set[2]).getTime();
+            time2 = sdf.parse(set[3]+" "+set[4]).getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        db.deleteDate(groupId, set[0], time1, time2);
         recreate();
     }
 

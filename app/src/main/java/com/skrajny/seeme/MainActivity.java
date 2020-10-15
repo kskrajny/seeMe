@@ -10,10 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    //TODO usuwanie wiadomosci do wyslania po jakims czasie
-    //TODO usuwanie dat przeszlych
     //TODO pozbycie sie klasy Date, zmiana na klase Calendar
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
         DatabaseHandler.getInstance(this);
         Intent udpService = new Intent(MainActivity.this, UdpService.class);
         startService(udpService);
+        startService(new Intent(getBaseContext(), Cleaner.class));
     }
 
     public void onResume() {

@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -130,7 +131,17 @@ public class DateActivity extends AppCompatActivity {
         String user = sp.getString("user", "anonymous");
         String date1 = tabDate[0]+" "+tabTime[0];
         String date2 = tabDate[1]+" "+tabTime[1];
-        db.addDate(groupId, user, date1, date2);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        long time1 = 0;
+        long time2 = 0;
+        try {
+            time1 = sdf.parse(date1).getTime();
+            time2 = sdf.parse(date2).getTime();
+        } catch (ParseException e) {
+            e.printStackTrace();
+            return;
+        }
+        db.addDate(groupId, user, time1, time2);
         Intent myIntent = new Intent(DateActivity.this, SendMessageActivity.class);
         myIntent.putExtra("mess", "3 "+user+" "+date1+" "+date2+" "+groupId);
         myIntent.putExtra("where", groupId);

@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import android.util.Pair;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -30,14 +29,14 @@ public class UdpService extends Service {
     DatagramSocket socket1;
     DatagramSocket socket2;
     final Binder binder = new LocalBinder();
-    final BlockingQueue<Pair<String, String>> queue = new LinkedBlockingQueue<>();
+    final BlockingQueue<Message> queue = new LinkedBlockingQueue<>();
     SharedPreferences sp;
     int port1 = 9090;
     int port2 = 9091;
+    final long DAY = 1000 * 60 * 60 * 24;
 
     @SuppressLint("SimpleDateFormat")
     SimpleDateFormat sdfrmt = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-    Date d = new Date();
 
     @Override
     public void onCreate() {
@@ -61,16 +60,20 @@ public class UdpService extends Service {
 
     public class udpClient implements Runnable {
         public void run() {
-            Pair<String, String> p = null;
+            Message p = null;
             //noinspection InfiniteLoopStatement
             while (true) {
                 try {
                     p = queue.take();
-                    String mess = p.first;
-                    String where = p.second;
-                    String messID = "messID";
-                    sendMessage(socket1, port2, mess+" "+messID, where);
-                    getMessageClient(messID);
+                    String mess = p.message;
+                    String where = p.where;
+                    String messID = RandomString.getAlphaNumericString();
+                    long date = (new Date()).getTime();
+                    Log.i("seeme", p.deadline+" "+date);
+                    if(p.deadline >= date) {
+                        sendMessage(socket1, port2, mess + " " + messID, where);
+                        getMessageClient(messID);
+                    }
                 } catch (SocketTimeoutException e) {
                     queue.add(p);
                 } catch (Exception e) {}
@@ -254,8 +257,7 @@ public class UdpService extends Service {
             throw new Exception();
         if(!db.checkGroupID(set[6]))
             throw new Exception();
-        db.addDate(set[6], set[1], set[2]+" "+set[3], set[4]+" "+set[5]);
-        Log.i("seeme", "added");
+        db.addDate(set[6], set[1], javaDate1.getTime(), javaDate2.getTime());
         return set[6];
     }
 
@@ -289,7 +291,7 @@ public class UdpService extends Service {
 
     /*!!!!!!!!!!!! End of Handlers for server */
     public void addMessage(String mess, String where) {
-        queue.add(new Pair(mess, where));
+        queue.add(new Message(mess, where, (new Date()).getTime()+DAY));
     }
 
 }

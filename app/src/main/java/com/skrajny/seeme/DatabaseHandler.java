@@ -8,7 +8,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 import android.util.Pair;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -96,18 +95,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 +KEY_IP+" TEXT PRIMARY KEY, "
                 +KEY_DAY+" INTEGER NOT NULL, "
                 +KEY_CONTENT+" text NOT NULL);");
-        db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_DATES+"private ("
-                +KEY_NAME+" TEXT, "
-                +KEY_TIME_1+" TEXT NOT NULL, "
-                +KEY_TIME_2+" TEXT NOT NULL);");
         ContentValues values = new ContentValues();
         values.put(KEY_ID, private_id);
         values.put(KEY_NAME, "private");
         db.insertOrThrow(TABLE_GROUPS, null, values);
         db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_DATES+private_id+" ("
                 +KEY_NAME+" TEXT, "
-                +KEY_TIME_1+" TEXT NOT NULL, "
-                +KEY_TIME_2+" TEXT NOT NULL);");
+                +KEY_TIME_1+" INTEGER NOT NULL, "
+                +KEY_TIME_2+" INTEGER NOT NULL);");
         db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_MEMBERS+private_id+" ("
                 +KEY_IP+" TEXT PRIMARY KEY)");
     }
@@ -155,8 +150,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public class TimeSpan {
-        Date date1;
-        Date date2;
+        Date date1 = new Date();
+        Date date2 = new Date();
         String name;
     }
 
@@ -164,19 +159,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.rawQuery(datesQuery+groupID, null);
         List<TimeSpan> list = new ArrayList<>();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         if (cursor.moveToFirst()) {
             do {
-                String d1 = cursor.getString(cursor.getColumnIndex(KEY_TIME_1));
-                String d2 = cursor.getString(cursor.getColumnIndex(KEY_TIME_2));
+                long d1 = cursor.getLong(cursor.getColumnIndex(KEY_TIME_1));
+                long d2 = cursor.getLong(cursor.getColumnIndex(KEY_TIME_2));
                 String name = cursor.getString(cursor.getColumnIndex(KEY_NAME));
                 TimeSpan t = new TimeSpan();
-                try {
-                    t.date1 = sdf.parse(d1);
-                    t.date2 = sdf.parse(d2);
-                } catch(ParseException e) {
-                    e.printStackTrace();
-                }
+                t.date1.setTime(d1);
+                t.date2.setTime(d2);
                 list.add(t);
             } while (cursor.moveToNext());
         }
@@ -201,26 +191,28 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.rawQuery(datesQuery+groupID, null);
         List<String> list = new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         if (cursor.moveToFirst()) {
             do {
-                String d1 = cursor.getString(cursor.getColumnIndex(KEY_TIME_1));
-                String d2 = cursor.getString(cursor.getColumnIndex(KEY_TIME_2));
+                Date d1 = new Date();
+                d1.setTime(cursor.getLong(cursor.getColumnIndex(KEY_TIME_1)));
+                Date d2 = new Date();
+                d2.setTime(cursor.getLong(cursor.getColumnIndex(KEY_TIME_2)));
                 String name = cursor.getString(cursor.getColumnIndex(KEY_NAME));
-                list.add(name+" "+d1+" "+d2);
+                list.add(name+" "+sdf.format(d1)+" "+sdf.format(d2));
             } while (cursor.moveToNext());
         }
         db.close();
         return list;
     }
 
-    public void deleteDate(final String groupID, String date) {
+    public void deleteDate(final String groupID, String name, long date1, long date2) {
         SQLiteDatabase db = getWritableDatabase();
-        final String[] set = date.split(" ");
         db.execSQL("DELETE FROM "
                 +TABLE_DATES+groupID+" WHERE "
-                +KEY_NAME+"=\""+set[0]+"\" AND "
-                +KEY_TIME_1+"=\""+set[1]+" "+set[2]+"\" AND "
-                +KEY_TIME_2+"=\""+set[3]+" "+set[4]+"\"");
+                +KEY_NAME+"=\""+name+"\" AND "
+                +KEY_TIME_1+"=\""+date1+"\" AND "
+                +KEY_TIME_2+"=\""+date2+"\"");
     }
 
     public void deleteGroup(String groupId) {
@@ -250,8 +242,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             db.insertOrThrow(TABLE_GROUPS, null, values);
             db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_DATES+id+"("
                     +KEY_NAME+" TEXT, "
-                    +KEY_TIME_1+" TEXT NOT NULL, "
-                    +KEY_TIME_2+" TEXT NOT NULL);");
+                    +KEY_TIME_1+" INTEGER NOT NULL, "
+                    +KEY_TIME_2+" INTEGER NOT NULL);");
             db.execSQL("CREATE TABLE IF NOT EXISTS "+TABLE_MEMBERS+id+" ("
                     +KEY_IP+" TEXT PRIMARY KEY)");
         } catch (Exception e) {
@@ -261,7 +253,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
     }
 
-    public void addDate(String groupID, String name, String date1, String date2) {
+    public void addDate(String groupID, String name, long date1, long date2) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(KEY_TIME_1, date1);
@@ -292,7 +284,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public boolean checkGroupID(String groupId) {
         SQLiteDatabase db = getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM groups WHERE id=\""+groupId+"\"", null);
-        //Cursor cursor = db.rawQuery(groupIDQuery, new String[] {groupId});
         boolean ret = cursor.getCount() == 1;
         db.close();
         return ret;
@@ -305,5 +296,17 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         boolean ret = cursor.getCount() == 1;
         db.close();
         return ret;
+    }
+
+    public void cleanDates() {
+        List<Pair<String, String>> list = getGroups();
+        long date = (new Date()).getTime();
+        for(Pair<String, String> p : list) {
+            SQLiteDatabase db = getWritableDatabase();
+            db.execSQL("DELETE FROM "
+                    + TABLE_DATES + p.second + " WHERE "
+                    + KEY_TIME_2 + " < " + date);
+            db.close();
+        }
     }
 }
