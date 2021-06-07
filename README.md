@@ -1,2 +1,2 @@
 # seeMe
-Aplikacja ułatwiająca spotkanie z przyjaciółmi i nie tylko. W remoncie.
+Aplikacja ułatwiająca spotkanie z przyjaciółmi i nie tylko. Prace zawieszone.
